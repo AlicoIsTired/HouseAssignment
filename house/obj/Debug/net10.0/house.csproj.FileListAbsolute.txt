@@ -1,0 +1,28 @@
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\bin\Debug\net10.0\house.exe
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\bin\Debug\net10.0\house.deps.json
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\bin\Debug\net10.0\house.runtimeconfig.json
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\bin\Debug\net10.0\house.dll
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\bin\Debug\net10.0\house.pdb
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.AssemblyInfoInputs.cache
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.AssemblyInfo.cs
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.csproj.CoreCompileInputs.cache
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.dll
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\refint\house.dll
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.pdb
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.genruntimeconfig.cache
+C:\Users\Alico\My Drive\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\ref\house.dll
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\bin\Debug\net10.0\house.exe
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\bin\Debug\net10.0\house.deps.json
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\bin\Debug\net10.0\house.runtimeconfig.json
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\bin\Debug\net10.0\house.dll
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\bin\Debug\net10.0\house.pdb
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.GeneratedMSBuildEditorConfig.editorconfig
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.AssemblyInfoInputs.cache
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.AssemblyInfo.cs
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.csproj.CoreCompileInputs.cache
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.dll
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\refint\house.dll
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.pdb
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\house.genruntimeconfig.cache
+I:\Documents - google cloud\Cirencester work - CW\Comp Sci\House\house\house\obj\Debug\net10.0\ref\house.dll
