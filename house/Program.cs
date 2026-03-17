@@ -17,6 +17,9 @@ internal static class Program
     private const ConsoleColor OutputColoUr = ConsoleColor.Yellow;
     private static readonly char[,] Map = new char[MapWidth, Height];
     
+    private const char WallSymbol = '#';
+    private const char PlayerSymbol = 'O';
+    
 
     private static void Main()
     {
@@ -47,8 +50,7 @@ internal static class Program
         else
         {
             house = new House();
-            Room currRoom = house.GetRoom("first room");
-            player = new(currRoom, 0, 0);
+            player = house.Player;
         }
         
         // set up the uhh line in the middle
@@ -71,10 +73,55 @@ internal static class Program
             
             ClearSideBar();
             
-            switch (selectedOption)
+            if (selectedOption is "w" or "a" or "s" or "d") // if movement key
+            {
+                (int selectedX, int selectedY) = player.GetCoords();
+                switch (selectedOption) // sets selectedX and selectedY to the coords of the thing moved into
+                {
+                    case "w":
+                        selectedY--;
+                        break;
+                    case "s":
+                        selectedY++;
+                        break;
+                    case "a":
+                        selectedX--;
+                        break;
+                    case "d":
+                        selectedX++;
+                        break;
+                }
+
+                if (selectedX >= 0 && selectedY >= 0)
+                {
+                    char selectedObject = Map[selectedX, selectedY];
+                    switch (selectedObject)
+                    {
+                        case ' ':
+                            MovePlayer(player, selectedX, selectedY);
+                            break;
+
+                        case '-':
+                        case '|':
+                            TryDoor(player, selectedX, selectedY);
+                            break;
+
+                        case WallSymbol:
+
+                            break;
+
+                        default:
+                            WriteOptions(player.GetRoom().GetItemNames(), " : ");
+                            break;
+                    }
+                }
+
+            }
+            else switch (selectedOption) // if other
             {
                 case "h":
                     WriteOffset("help - h - list commands" +
+                                "\nmovement - w/a/s/d - move the player and interact" +
                                 "\nlist doors - l - list doors of current room" +
                                 "\nmove - m - move rooms" +
                                 "\nfind items - f - search for items in the room" + 
@@ -106,16 +153,49 @@ internal static class Program
         } while (repeat);
     }
 
+    private static void TryDoor(Player player, int newX, int newY)
+    {
+        Door door = null!;
+        foreach(Door d in player.GetRoom().GetDoors()) // get targeted door
+        {
+            if (d.X == newX && d.Y == newY)
+            {
+                door = d;
+            }
+        }
+        player.SetRoom(door.UseDoor(player.GetRoom())); // set player room
+        DrawRoom(player.GetRoom());
+        
+        if (player.GetCoords().X > newX) MovePlayer(player, newX - 1, newY); // if door to the left
+        else if (player.GetCoords().X < newX) MovePlayer(player, newX + 1, newY); // if door to the right
+        else if (player.GetCoords().Y < newY) MovePlayer(player, newX, newY + 1); // if door to the top
+        else if (player.GetCoords().Y > newY) MovePlayer(player, newX, newY - 1); // if door to the bottom
+        
+        Draw();
+    }
+
+    private static void MovePlayer(Player player, int newX, int newY) // WARNING: if door pressed against edge (somehow) room will be set but not location
+    {
+        if (newX < MapWidth - 1 && newY < Height - 1)
+            // I don't know why but this is how it wants to be
+        {
+            Map[player.GetCoords().X, player.GetCoords().Y] = ' ';
+            player.SetCoords(newX, newY);
+            Map[newX, newY] = PlayerSymbol;
+            Draw();
+        }
+    }
+    
     private static void DrawRoom(Room room)
     {
-        const char wallSymbol = '#';
+        
         for (int y = room.Y; y < room.Y + room.Height; y++)
         {
             for (int x = room.X; x < room.X + room.Length; x++)
             {
                 if (x == room.X || y == room.Y || y == room.Y + room.Height - 1 || x == room.X + room.Length - 1)
                 {
-                    Map[x, y] = wallSymbol;
+                    Map[x, y] = WallSymbol;
                 }
                 else
                 {
@@ -132,7 +212,7 @@ internal static class Program
         foreach (Door d in room.GetDoors())
         {
             char symbol = '-';
-            if (Map[d.X, d.Y + 1] == wallSymbol) symbol = '|';
+            if (Map[d.X, d.Y + 1] == WallSymbol) symbol = '|';
             Map[d.X, d.Y] =  symbol;
         }
     }
@@ -202,7 +282,7 @@ internal static class Program
     /// <summary>
     /// clear and put middle line down
     /// </summary>
-    /// <param name="player">initialised player</param>
+    /// <param name="player">initialized player</param>
     private static void Setup(Player player)
     {
         Console.Clear();
@@ -220,6 +300,7 @@ internal static class Program
             }
         }
         DrawRoom(player.GetRoom());
+        MovePlayer(player, player.GetCoords().X, player.GetCoords().Y);
         Draw();
         
         
