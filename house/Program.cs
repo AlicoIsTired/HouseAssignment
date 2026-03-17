@@ -1,20 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace house;
 
 internal static class Program
 {
     private const int Height = 20;
-    private const int SidebarOffset = 60;
-    private const int SidebarWidth = 60;
+    private const int MapWidth = 59;
+    private const int BarPosition = 60;
+    private const int SidebarPosition = 62;
+    private const int SidebarWidth = 50;
     private const ConsoleColor InputColoUr = ConsoleColor.DarkRed;
     private const ConsoleColor OutputColoUr = ConsoleColor.Yellow;
+    private static readonly char[,] Map = new char[MapWidth, Height];
+    
 
     private static void Main()
     {
 #pragma warning disable CA1416
-        Console.WindowWidth = SidebarOffset + SidebarWidth;
+        Console.WindowWidth = SidebarPosition + SidebarWidth;
 #pragma warning restore CA1416
         string run;
         House house;
@@ -23,7 +28,7 @@ internal static class Program
         // decide what to do
         do
         {
-            Console.Write("build house, or run: ");
+            Console.Write("build house, or run (use h while running for command list): ");
             run = Console.ReadLine()!;
         } while (run.ToLower() != "run" && run.ToLower() != "build" && 
                  run.ToLower() != "r" &&  run.ToLower() != "b");
@@ -36,14 +41,13 @@ internal static class Program
         {
             WriteOffset("Nothing here yet!");
             house = new House();
-            Room currRoom = house.GetRoom("first room");
-            player = new(currRoom);
+            player = house.Player;
         }
         else
         {
             house = new House();
             Room currRoom = house.GetRoom("first room");
-            player = new(currRoom);
+            player = new(currRoom, 0, 0);
         }
 
         Run(player);
@@ -57,52 +61,88 @@ internal static class Program
     /// <param name="player">The player</param>
     private static void Run(Player player)
     {
+        
+        for (int y = 0; y < Height; y++)
+        {
+            for (int x = 0; x < MapWidth; x++)
+            {
+                Map[x, y] = ' ';
+            }
+        }
+        DrawRoom(player.GetRoom());
+        Draw();
+        
         bool repeat = true;
         do
         {
-            Console.SetCursorPosition(SidebarOffset, 0);
+            Console.SetCursorPosition(BarPosition, 0);
             string selectedOption = Input(true).ToLower();
             
             ClearSideBar();
             
             switch (selectedOption)
             {
-                case "help":
                 case "h":
                     WriteOffset("help - h - list commands" +
-                                "\ndoors - d - list doors of current room" +
+                                "\nlist doors - l - list doors of current room" +
                                 "\nmove - m - move rooms" +
                                 "\nfind items - f - search for items in the room" + 
                                 "\nquit - q - leave the program");
                     break;
                 
-                case "doors":
-                case "d":
+                case "l":
                     WriteOptions(player.GetRoom().GetDoors(), " : Leads to ");
                     break;
                 
-                case "move":
                 case "m":
                     MoveRoom(player);
+                    DrawRoom(player.GetRoom());
+                    Draw();
                     break;
                 
-                case "find items":
                 case "f":
                     WriteOptions(player.GetRoom().GetItems(), " : ");
                     break;
                 
-                case "quit":
                 case "q":
                     repeat = false;
                     break;
                 
                 default:
-                    WriteOffset(" --> Sorry, this command isn't valid, try \"help\"\nfor a list of commands.", coloUr: OutputColoUr);
+                    WriteOffset(" --> Sorry, this command isn't valid, try \"h\" for\na list of commands.", coloUr: OutputColoUr);
                     break;
             }
         } while (repeat);
     }
 
+    private static void DrawRoom(Room room)
+    {
+        for (int y = room.Y; y < room.Y + room.Height; y++)
+        {
+            for (int x = room.X; x < room.X + room.Length; x++)
+            {
+                if (x == room.X || y == room.Y || y == room.Y + room.Height - 1 || x == room.X + room.Length - 1)
+                {
+                    Map[x, y] = 'X';
+                }
+            }
+        }
+    }
+
+    private static void Draw()
+    {
+        Console.SetCursorPosition(0,0);
+        for (int y = 0; y < Height; y++)
+        {
+            string line = "";
+            for (int x = 0; x < MapWidth; x++)
+            {
+                line += Map[x, y];
+            }
+            Console.WriteLine(line);
+        }
+    }
+    
 
     /// <summary>
     /// writes the door numbers and where they lead
@@ -139,7 +179,7 @@ internal static class Program
         offsetY++;
         
         // try and enter room
-        Room newRoomQ = currRoom.UseDoor(selected);
+        Room newRoomQ = currRoom.FromRoomUseDoor(selected);
         if  (newRoomQ != null!)
         {
             player.SetRoom(newRoomQ);
@@ -159,7 +199,7 @@ internal static class Program
         WriteOffset("Map here maybe", 4, 20);
         for (int i = 0; i < Height; i++)
         {
-            WriteOffset("/", i, SidebarOffset - 2);
+            WriteOffset("/", i, BarPosition);
         }
     }
 
@@ -168,10 +208,11 @@ internal static class Program
     /// Write line with offset
     /// </summary>
     /// <param name="text">text, this can be multiple lines, but each line must be less than SidebarWidth</param>
-    /// <param name="offsetX">the offset on the X axis, from the left</param>
     /// <param name="offsetY">the offset on the Y axis, from the top</param>
+    /// <param name="offsetX">the offset on the X axis, from the left</param>
     /// <param name="coloUr">ColoUr, defaults to white, and will always return to white at the end</param>
-    private static int WriteOffset(string text, int offsetY = 1, int offsetX = SidebarOffset, ConsoleColor coloUr = ConsoleColor.White)
+    private static void WriteOffset(string text, int offsetY = 1, int offsetX = SidebarPosition,
+        ConsoleColor coloUr = ConsoleColor.White)
     {
         Console.ForegroundColor = coloUr;
         string[] lines = text.Split("\n");
@@ -183,7 +224,6 @@ internal static class Program
         }
 
         Console.ForegroundColor = ConsoleColor.White;
-        return offsetY;
     }
 
 
@@ -194,7 +234,7 @@ internal static class Program
     /// <param name="offsetY">Y offset</param>
     /// <param name="offsetX">X offset</param>
     /// <returns>input</returns>
-    private static string Input(bool clearQ = false, int offsetY = 0, int offsetX = SidebarOffset)
+    private static string Input(bool clearQ = false, int offsetY = 0, int offsetX = SidebarPosition)
     {
         Console.SetCursorPosition(offsetX, offsetY);
         Console.ForegroundColor = InputColoUr;
@@ -218,7 +258,7 @@ internal static class Program
     {
         for (int y = 0; y < Height; y++)
         {
-            Console.SetCursorPosition(SidebarOffset, y); 
+            Console.SetCursorPosition(SidebarPosition, y); 
             Console.Write(new string(' ', SidebarWidth));
         }
     }
@@ -233,10 +273,26 @@ internal static class Program
 internal class Player
 {
     private Room _currRoom;
+    private int _x;
+    private int _y;
     
-    public Player(Room startRoom)
+    // ReSharper disable once ConvertToPrimaryConstructor
+    public Player(Room startRoom, int xPosition, int yPosition)
     {
         _currRoom = startRoom;
+        _x = xPosition;
+        _y = yPosition;
+    }
+
+    public (int X, int Y) GetCoords()
+    {
+        return (_x, _y);
+    }
+
+    public void SetCoords(int x, int y)
+    {
+        _x = x;
+        _y = y;
     }
     
     public Room GetRoom()
@@ -261,9 +317,13 @@ internal class Player
 /// an item
 /// </summary>
 /// <param name="name">the items name</param>
-internal class Item(string name)
+/// <param name="xCoord">X coordinate of the item</param>
+/// <param name="yCoord">Y coordinate of the item</param>
+internal class Item(string name, int xCoord = 0, int yCoord = 0)
 {
     public readonly string Name = name;
+    public int X = xCoord;
+    public int Y = yCoord;
 }
 
 
@@ -274,19 +334,40 @@ internal class Item(string name)
 internal class House
 {
     private readonly List<Room> _rooms = [];
-    public House()
+    public Player Player = null!;
+    
+    
+    public House(bool defaultHouse = true)
     {
-        _rooms.Add(new Room("first room"));
-        _rooms.Add(new Room("second room"));
-        
-        List<Item> thirdRoomItems = [new Item("cheese"), new Item("eggs")];
-        _rooms.Add(new Room("third room"));
-        _rooms[2].SetItems(thirdRoomItems);
-        
-        _rooms[0].CreateDoor(_rooms[1]);
-        _rooms[0].CreateDoor(_rooms[2]);
+        if (defaultHouse) CreateDefaultHouse();
     }
 
+    [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
+    private void CreateDefaultHouse()
+    {
+        
+        
+        _rooms.Add(new Room("first room",5,7, 4, 16));
+        _rooms.Add(new Room("second room",0,0));
+        
+        Player = new Player(_rooms[0], 0, 0);
+        
+        List<Item> thirdRoomItems = [new Item("cheese"), new Item("eggs")];
+        _rooms.Add(new Room("third room",0,0));
+        _rooms[2].SetItems(thirdRoomItems);
+        new Door(_rooms[0], _rooms[1], 0, 0);
+    }
+
+    public string[] MakeMap(int height, int width)
+    {
+        string[] map = new string[height];
+        for (int i = 0; i < height; i++)
+        {
+            map[i] = new string(' ', width);
+        }
+        return map;
+    }
+    
     public Room GetRoom(string roomName)
     {
         roomName = roomName.ToLower();
@@ -304,20 +385,20 @@ internal class House
 /// A room in the house
 /// </summary>
 /// <param name="roomName">The selected name of the room</param>
-internal class Room(string roomName, int length = 5, int height = 5)
+internal class Room(string roomName, int xPosition, int yPosition, int height = 5, int length = 5)
 {
     public readonly string RoomName = roomName;
     public readonly int Length = length;
     public readonly int Height = height;
+    public readonly int X = xPosition;
+    public readonly int Y = yPosition;
     
     private readonly List<Door> _doors = [];
     private List<Item> _items = [];
 
-    public void CreateDoor(Room room, bool locked = false, bool reverse = false)
+    public void AddDoor(Door d)
     {
-        Door d = new Door(this, room, locked);
         _doors.Add(d);
-        if (!reverse) room.CreateDoor(this, locked, true);
     }
     
     /// <summary>
@@ -325,7 +406,7 @@ internal class Room(string roomName, int length = 5, int height = 5)
     /// </summary>
     /// <param name="d">integer, the index of the door to be opened (see GetDoors())</param>
     /// <returns>returns room the door led to, if error, null</returns>
-    public Room UseDoor(string d)
+    public Room FromRoomUseDoor(string d)
     {
         bool isIntQ = int.TryParse(d, out int doorInt);
         if (isIntQ && _doors.Count != 0 && doorInt >= 0)
@@ -379,22 +460,43 @@ internal class Room(string roomName, int length = 5, int height = 5)
 
 
 /// <summary>
-/// a door, when made a reverse door will also be made
+/// a door.
 /// </summary>
-/// <param name="r1">where the door is</param>
-/// <param name="r2">where the door will lead</param>
-/// <param name="locked">if the door cannot be opened, defaults to locked</param>
-internal class Door(Room r1, Room r2, bool locked)
+internal class Door
 {
-    private bool _locked = locked;
+    private bool _locked;
+    private readonly Room _r1;
+    private readonly Room _r2;
+    
+    public int X;
+    public int Y;
 
+
+    /// <param name="r1">where the door is</param>
+    /// <param name="r2">where the door will lead</param>
+    /// <param name="xPosition">x coord of door</param>
+    /// <param name="yPosition">y coord of door</param>
+    /// <param name="locked">if the door cannot be opened, defaults to locked</param>
+    public Door(Room r1, Room r2, int xPosition, int yPosition, bool locked = false)
+    {
+        _locked = locked;
+        _r1 = r1;
+        _r2 = r2;
+        _r1.AddDoor(this);
+        _r2.AddDoor(this);
+        
+        X = xPosition;
+        Y = yPosition;
+        
+    }
+    
     public Room UseDoor(Room r)
     {
         if (_locked) return r;
         
-        if (r == r1) return r2;
+        if (r == _r1) return _r2;
         
-        return r1;
+        return _r1;
     }
 
     public void SetLocked(bool locked)
