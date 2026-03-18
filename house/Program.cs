@@ -182,8 +182,9 @@ internal static class Program
         if (item.PickupQ) // ask to pick up the item
         {
             string pickupRequest = "This item can be picked up. Pick up? (y/N): ";
-            string playerOption = Input(offsetY: 2, offsetX: pickupRequest.Length + SidebarPosition, singleCharQ: true).ToLower();
             WriteOffset(pickupRequest, 2);
+            
+            string playerOption = Input(offsetY: 2, offsetX: pickupRequest.Length + SidebarPosition, singleCharQ: true).ToLower();
 
             if (playerOption == "y" || playerOption == selectedOption)
             {
@@ -210,7 +211,7 @@ internal static class Program
             safe.Contents.X = safe.X; // ensure item will be placed at safe, not really needed
             safe.Contents.Y = safe.Y;
             player.GetRoom().RemoveItem(safe);
-            player.AddItem(safe.Contents);
+            player.GetRoom().AddItem(safe.Contents);
             
             DrawRoom(player.GetRoom());
             Draw();
@@ -600,7 +601,6 @@ internal class House
     [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
     private void CreateDefaultHouse()
     {
-        
         
         _rooms.Add(new Room("first room",5,7, 6, 16));
         _rooms.Add(new Room("second room",20,4, 12));
