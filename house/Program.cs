@@ -57,8 +57,7 @@ internal static class Program
         Setup(player);
         Run(player);
     }
-
-
+    
     /// <summary>
     /// running the house
     /// </summary>
@@ -111,7 +110,7 @@ internal static class Program
                             break;
 
                         default:
-                            ItemInteract(player, selectedX, selectedY);
+                            ItemInteract(player, selectedX, selectedY, selectedOption);
                             break;
                     }
                 }
@@ -159,23 +158,34 @@ internal static class Program
         } while (repeat);
     }
 
-    private static void ItemInteract(Player player, int selectedX, int selectedY)
+    /// <summary>
+    /// interacts with an item, if it can be picked up, gives the player the option to pick it up
+    /// </summary>
+    /// <param name="player">player</param>
+    /// <param name="selectedX">Item location X</param>
+    /// <param name="selectedY">Item location Y</param>
+    /// <param name="selectedOption">Used to pick up item if walked into again (if possible)</param>
+    private static void ItemInteract(Player player, int selectedX, int selectedY, string selectedOption)
     {
         Item item = null!;
-        foreach(Item i in player.GetRoom().GetItems()) // get targeted door
+        foreach(Item i in player.GetRoom().GetItems()) // get targeted item
         {
             if (i.X == selectedX && i.Y == selectedY)
             {
                 item = i;
             }
         }
+        
         WriteOffset(item.Text);
-        if (item.PickupQ)
+        
+        
+        if (item.PickupQ) // ask to pick up the item
         {
             string pickupRequest = "This item can be picked up. Pick up? (y/N): ";
+            string playerOption = Input(offsetY: 2, offsetX: pickupRequest.Length + SidebarPosition, singleCharQ: true).ToLower();
             WriteOffset(pickupRequest, 2);
 
-            if (Input(offsetY: 2, offsetX: pickupRequest.Length + SidebarPosition, singleCharQ: true).ToLower() == "y")
+            if (playerOption == "y" || playerOption == selectedOption)
             {
                 player.AddItem(item);
                 player.GetRoom().RemoveItem(item);
@@ -184,8 +194,39 @@ internal static class Program
             }
             
         }
+        else if (item.GetType() == typeof(Safe)) // no safe can be picked up so else can be used
+        {
+            TrySafe(player, (Safe)item);
+        }
+    }
+
+    private static void TrySafe(Player player, Safe safe)
+    {
+        string codeRequest = "Input the safe's code: ";
+        WriteOffset(codeRequest, 2);
+        string inputtedCode = Input(false, 2, codeRequest.Length + SidebarPosition);
+        if (inputtedCode == safe.Code)
+        {
+            safe.Contents.X = safe.X; // ensure item will be placed at safe, not really needed
+            safe.Contents.Y = safe.Y;
+            player.GetRoom().RemoveItem(safe);
+            player.AddItem(safe.Contents);
+            
+            DrawRoom(player.GetRoom());
+            Draw();
+            WriteOffset("This safe has been opened!", 3, coloUr:  OutputColoUr);
+            return;
+        }
+        WriteOffset("The safe does not open, the code must be wrong", 3, coloUr:  OutputColoUr);
     }
     
+    
+    /// <summary>
+    /// Attempts to go through door, if locked, tries to unlock it with a key.
+    /// </summary>
+    /// <param name="player">The player</param>
+    /// <param name="newX">X of the door</param>
+    /// <param name="newY">Y of the door</param>
     private static void TryDoor(Player player, int newX, int newY)
     {
         Door door = null!;
@@ -196,6 +237,25 @@ internal static class Program
                 door = d;
             }
         }
+
+        if (door.GetLockedQ()) // if door locked, try to use a key, else cancel movement
+        {
+            foreach (Key k in player.GetItems().OfType<Key>())
+            {
+                if (k.LockedDoor == door)
+                {
+                    player.RemoveItem(k);
+                    door.SetLockedQ(false);
+                    WriteOffset("Door unlocked!");
+                    break;
+                }
+            }
+            if (door.GetLockedQ())
+            {
+                WriteOffset("This door is locked. Maybe find a key first");
+                return;
+            }
+        }
         player.SetRoom(door.UseDoor(player.GetRoom())); // set player room
         DrawRoom(player.GetRoom());
         
@@ -203,7 +263,6 @@ internal static class Program
         else if (player.GetCoords().X < newX) MovePlayer(player, newX + 1, newY); // if door to the right
         else if (player.GetCoords().Y < newY) MovePlayer(player, newX, newY + 1); // if door to the top
         else if (player.GetCoords().Y > newY) MovePlayer(player, newX, newY - 1); // if door to the bottom
-        
     }
 
     private static void MovePlayer(Player player, int newX, int newY) // WARNING: if door pressed against edge (somehow) room will be set but not location
@@ -238,7 +297,7 @@ internal static class Program
 
         foreach (Item i in room.GetItems())
         {
-            Map[i.X, i.Y] = i.Symbol;
+            if (i.X != -1) Map[i.X, i.Y] = i.Symbol; // if so items inside of safe don't get printed, look at "Safe()"
         }
 
         foreach (Door d in room.GetDoors())
@@ -249,7 +308,7 @@ internal static class Program
         }
     }
 
-    private static void Draw()
+    private static void Draw() // could prolly change this so characters are written individually, so the walls could be made grey (less busy visually)
     {
         Console.SetCursorPosition(0,0);
         for (int y = 0; y < Height; y++)
@@ -489,11 +548,26 @@ internal class Player
 internal class Item(string name, int xCoord, int yCoord, string text, bool pickupQ = true, char symbol = '?')
 {
     public readonly string Name = name;
-    public readonly int X = xCoord;
-    public readonly int Y = yCoord;
+    public int X = xCoord;
+    public int Y = yCoord;
     public readonly string Text = text;
     public readonly bool PickupQ = pickupQ;
     public readonly char Symbol = symbol;
+}
+
+internal class Message(string name, int xCoord, int yCoord, string text) : Item(name, xCoord, yCoord, text, false, '=') {}
+
+
+
+/// <summary>
+/// the contents X coord MUST be set to -1
+/// </summary>
+/// <param name="contents">the item to drop when opened</param>
+/// <param name="code">the code that must be inputted to open it</param>
+internal class Safe(string name, int xCoord, int yCoord, Item contents, string text, string code) : Item(name, xCoord, yCoord, text, false, '@')
+{
+    public readonly Item Contents = contents;
+    public readonly string Code = code;
 }
 
 
@@ -502,7 +576,7 @@ internal class Item(string name, int xCoord, int yCoord, string text, bool picku
 /// A key for a door, inherits properties from Item
 /// </summary>
 /// <param name="lockedDoor">Door the key can open</param>
-internal class Key(string name, int xCoord, int yCoord, Door lockedDoor, string text, bool pickup = true, char symbol = '?') : Item(name, xCoord, yCoord, text, pickup, symbol)
+internal class Key(string name, int xCoord, int yCoord, Door lockedDoor, string text) : Item(name, xCoord, yCoord, text, true, '¬')
 {
     public readonly Door LockedDoor = lockedDoor;
 }
@@ -535,13 +609,16 @@ internal class House
         List<Item> playerItems = [new Item("cheese", 4, 4, "Your cheese")];
         Player = new Player(_rooms[0], 6, 8, playerItems);
         
-        List<Item> thirdRoomItems = [new Item("Mouldy ham", 3, 14, "Ham that mould on it"),
-            new Item("eggs", 3, 16, "An egg that is surprisingly egg shaped")];
+        Door door1To2 = new Door(_rooms[0], _rooms[1], 20, 9, true);
+        new Door(_rooms[0], _rooms[2], 7, 12);
+        
+        List<Item> thirdRoomItems = [
+            new("eggs", 3, 15, "An egg that is surprisingly egg shaped"),
+            new Message("Message", 3, 14, "The code for the safe is \"Hello world\""),
+            new Safe("Safe", 3, 16, new Key("Key", 3, 15, door1To2, "A key"), "This seems to be a safe", "Hello world")
+        ];
         
         _rooms[2].SetItems(thirdRoomItems);
-        
-        new Door(_rooms[0], _rooms[1], 20, 9, true);
-        new Door(_rooms[0], _rooms[2], 7, 12);
     }
 
     public string[] MakeMap(int height, int width)
@@ -660,7 +737,7 @@ internal class Room(string roomName, int xPosition, int yPosition, int height = 
 /// </summary>
 internal class Door
 {
-    private bool _locked;
+    private bool _lockedQ;
     private readonly Room _r1;
     private readonly Room _r2;
     
@@ -672,10 +749,10 @@ internal class Door
     /// <param name="r2">where the door will lead</param>
     /// <param name="xPosition">x coord of door</param>
     /// <param name="yPosition">y coord of door</param>
-    /// <param name="locked">if the door cannot be opened, defaults to locked</param>
-    public Door(Room r1, Room r2, int xPosition, int yPosition, bool locked = false)
+    /// <param name="lockedQ">if the door cannot be opened, defaults to locked</param>
+    public Door(Room r1, Room r2, int xPosition, int yPosition, bool lockedQ = false)
     {
-        _locked = locked;
+        _lockedQ = lockedQ;
         _r1 = r1;
         _r2 = r2;
         _r1.AddDoor(this);
@@ -688,15 +765,16 @@ internal class Door
     
     public Room UseDoor(Room r)
     {
-        if (_locked) return r;
-        
-        if (r == _r1) return _r2;
-        
-        return _r1;
+        return r == _r1 ? _r2 : _r1; // unlocking door is handled in TryDoor() in Program
     }
 
-    public void SetLocked(bool locked)
+    public void SetLockedQ(bool lockedQ)
     {
-        _locked = locked;
+        _lockedQ = lockedQ;
+    }
+
+    public bool GetLockedQ()
+    {
+        return _lockedQ;
     }
 }
