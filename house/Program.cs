@@ -111,7 +111,7 @@ internal static class Program
                             break;
 
                         default:
-                            WriteOptions(player.GetRoom().GetItemNames(), " : ");
+                            ItemInteract(player, selectedX, selectedY);
                             break;
                     }
                 }
@@ -139,7 +139,13 @@ internal static class Program
                     break;
                 
                 case "f":
-                    WriteOptions(player.GetRoom().GetItemNames(), " : ");
+                    WriteOffset("This room contains...");
+                    WriteOptions(player.GetRoom().GetItemNames(), " : ", 2);
+                    break;
+                
+                case "i":
+                    WriteOffset("You are currently in possession of...");
+                    WriteOptions(player.GetItemNames(), " : ", 2);
                     break;
                 
                 case "q":
@@ -153,6 +159,33 @@ internal static class Program
         } while (repeat);
     }
 
+    private static void ItemInteract(Player player, int selectedX, int selectedY)
+    {
+        Item item = null!;
+        foreach(Item i in player.GetRoom().GetItems()) // get targeted door
+        {
+            if (i.X == selectedX && i.Y == selectedY)
+            {
+                item = i;
+            }
+        }
+        WriteOffset(item.Text);
+        if (item.PickupQ)
+        {
+            string pickupRequest = "This item can be picked up. Pick up? (y/N): ";
+            WriteOffset(pickupRequest, 2);
+
+            if (Input(offsetY: 2, offsetX: pickupRequest.Length + SidebarPosition, singleCharQ: true).ToLower() == "y")
+            {
+                player.AddItem(item);
+                player.GetRoom().RemoveItem(item);
+                DrawRoom(player.GetRoom());
+                Draw();
+            }
+            
+        }
+    }
+    
     private static void TryDoor(Player player, int newX, int newY)
     {
         Door door = null!;
@@ -171,7 +204,6 @@ internal static class Program
         else if (player.GetCoords().Y < newY) MovePlayer(player, newX, newY + 1); // if door to the top
         else if (player.GetCoords().Y > newY) MovePlayer(player, newX, newY - 1); // if door to the bottom
         
-        Draw();
     }
 
     private static void MovePlayer(Player player, int newX, int newY) // WARNING: if door pressed against edge (somehow) room will be set but not location
@@ -197,7 +229,7 @@ internal static class Program
                 {
                     Map[x, y] = WallSymbol;
                 }
-                else
+                else if (Map[x, y] != PlayerSymbol)
                 {
                     Map[x, y] = ' ';
                 }
@@ -251,7 +283,7 @@ internal static class Program
 
     
     /// <summary>
-    /// move room
+    /// move room using command
     /// </summary>
     /// <param name="player"></param>
     private static void MoveRoom(Player player)
@@ -282,7 +314,7 @@ internal static class Program
     /// <summary>
     /// clear and put middle line down
     /// </summary>
-    /// <param name="player">initialized player</param>
+    /// <param name="player">initialised player</param>
     private static void Setup(Player player)
     {
         Console.Clear();
@@ -342,10 +374,8 @@ internal static class Program
     {
         Console.SetCursorPosition(offsetX, offsetY);
         Console.ForegroundColor = InputColoUr;
-        string value;
         
-        if (singleCharQ) value = Console.ReadKey().KeyChar.ToString();
-        else value = Console.ReadLine()!;
+        string value = singleCharQ ? Console.ReadKey().KeyChar.ToString() : Console.ReadLine()!;
         
         Console.ForegroundColor = ConsoleColor.White;
 
@@ -383,13 +413,15 @@ internal class Player
     private Room _currRoom;
     private int _x;
     private int _y;
+    private readonly List<Item> _items;
     
     // ReSharper disable once ConvertToPrimaryConstructor
-    public Player(Room startRoom, int xPosition, int yPosition)
+    public Player(Room startRoom, int xPosition, int yPosition, List<Item>? items = null)
     {
         _currRoom = startRoom;
         _x = xPosition;
         _y = yPosition;
+        _items = items ?? new List<Item>();
     }
 
     public (int X, int Y) GetCoords()
@@ -401,6 +433,33 @@ internal class Player
     {
         _x = x;
         _y = y;
+    }
+
+    public void AddItem(Item item)
+    {
+        _items.Add(item);
+    }
+
+    public void RemoveItem(Item item)
+    {
+        _items.Remove(item);
+    }
+
+    public List<Item> GetItems()
+    {
+        return _items;
+    }
+    
+    public string[] GetItemNames()
+    {
+        string[] itemNames = new string[_items.Count];
+        int i = 0;
+        foreach (Item o in _items)
+        {
+            itemNames[i] = o.Name;
+            i++;
+        }
+        return itemNames;
     }
     
     public Room GetRoom()
@@ -427,12 +486,25 @@ internal class Player
 /// <param name="name">the items name</param>
 /// <param name="xCoord">X coordinate of the item</param>
 /// <param name="yCoord">Y coordinate of the item</param>
-internal class Item(string name, int xCoord, int yCoord, char symbol = '?')
+internal class Item(string name, int xCoord, int yCoord, string text, bool pickupQ = true, char symbol = '?')
 {
     public readonly string Name = name;
     public readonly int X = xCoord;
     public readonly int Y = yCoord;
+    public readonly string Text = text;
+    public readonly bool PickupQ = pickupQ;
     public readonly char Symbol = symbol;
+}
+
+
+
+/// <summary>
+/// A key for a door, inherits properties from Item
+/// </summary>
+/// <param name="lockedDoor">Door the key can open</param>
+internal class Key(string name, int xCoord, int yCoord, Door lockedDoor, string text, bool pickup = true, char symbol = '?') : Item(name, xCoord, yCoord, text, pickup, symbol)
+{
+    public readonly Door LockedDoor = lockedDoor;
 }
 
 
@@ -460,13 +532,15 @@ internal class House
         _rooms.Add(new Room("second room",20,4, 12));
         _rooms.Add(new Room("third room",2, 12, 7, 7));
         
-        Player = new Player(_rooms[0], 6, 8);
+        List<Item> playerItems = [new Item("cheese", 4, 4, "Your cheese")];
+        Player = new Player(_rooms[0], 6, 8, playerItems);
         
-        List<Item> thirdRoomItems = [new Item("cheese", 3, 14), new Item("eggs", 3, 16)];
+        List<Item> thirdRoomItems = [new Item("Mouldy ham", 3, 14, "Ham that mould on it"),
+            new Item("eggs", 3, 16, "An egg that is surprisingly egg shaped")];
         
         _rooms[2].SetItems(thirdRoomItems);
         
-        new Door(_rooms[0], _rooms[1], 20, 9);
+        new Door(_rooms[0], _rooms[1], 20, 9, true);
         new Door(_rooms[0], _rooms[2], 7, 12);
     }
 
