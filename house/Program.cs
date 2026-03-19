@@ -620,26 +620,6 @@ internal class House
         
         _rooms[2].SetItems(thirdRoomItems);
     }
-
-    public string[] MakeMap(int height, int width)
-    {
-        string[] map = new string[height];
-        for (int i = 0; i < height; i++)
-        {
-            map[i] = new string(' ', width);
-        }
-        return map;
-    }
-    
-    public Room GetRoom(string roomName)
-    {
-        roomName = roomName.ToLower();
-        foreach (Room r in _rooms)
-            if (r.RoomName == roomName) return r;
-        
-        return null!;
-        
-    }
 }
 
 

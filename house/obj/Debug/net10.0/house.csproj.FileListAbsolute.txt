@@ -41,3 +41,18 @@ I:\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0
 I:\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\house.pdb
 I:\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\house.genruntimeconfig.cache
 I:\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\ref\house.dll
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\bin\Debug\net10.0\house.exe
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\bin\Debug\net10.0\house.deps.json
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\bin\Debug\net10.0\house.runtimeconfig.json
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\bin\Debug\net10.0\house.dll
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\bin\Debug\net10.0\house.pdb
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\house.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\house.AssemblyInfoInputs.cache
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\house.AssemblyInfo.cs
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\house.csproj.CoreCompileInputs.cache
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\house.sourcelink.json
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\house.dll
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\refint\house.dll
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\house.pdb
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\house.genruntimeconfig.cache
+C:\Users\Alico\My Drive\Documents - google cloud\GitHub repos\HouseAssignment\house\obj\Debug\net10.0\ref\house.dll
