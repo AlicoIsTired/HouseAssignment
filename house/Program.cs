@@ -604,7 +604,7 @@ internal class House
         
         _rooms.Add(new Room("Bedroom",5,7, 6, 16));
         _rooms.Add(new Room("Hallway",20,4, 12));
-        _rooms.Add(new Room("Bedroom closet",2, 12, 7, 7));
+        _rooms.Add(new Room("Bedroom closet", 5, 12, 4, 6));
         
         // player begins in the Bedroom (room 0)
         List<Item> playerItems = [new Item("Pajamas", 4, 4, "")];
@@ -638,9 +638,11 @@ internal class House
 
         List<Item> thirdRoomItems =
         [
-            new("eggs", 3, 15, "An egg that is surprisingly egg shaped"),
-            new Message("Message", 3, 14, "The code for the safe is \"Hello world\""),
-            new Safe("Safe", 3, 16, new Key("Key", 3, 15, door1To2, "A key"), "This seems to be a safe", "Hello world")
+            new("clothes1", 7, 14, "Some clean clothes", false),
+            new("clothes2", 9, 13, "Some clean clothes", false),
+            new("clothes3", 9, 14, "Some clean clothes", false),
+            new Message("Message", 8, 14, "The code for the safe is \"Hello world\""),
+            new Safe("Safe", 6, 14, new Key("Key", 0, 0, door1To2, "A key"), "This seems to be a safe", "Hello world")
         ];
         
         _rooms[2].SetItems(thirdRoomItems);

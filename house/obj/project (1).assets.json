@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "I:\\Documents - google cloud\\GitHub repos\\HouseAssignment\\house\\house.csproj",
+      "projectUniqueName": "C:\\Users\\Alico\\My Drive\\Documents - google cloud\\GitHub repos\\HouseAssignment\\house\\house.csproj",
       "projectName": "house",
-      "projectPath": "I:\\Documents - google cloud\\GitHub repos\\HouseAssignment\\house\\house.csproj",
+      "projectPath": "C:\\Users\\Alico\\My Drive\\Documents - google cloud\\GitHub repos\\HouseAssignment\\house\\house.csproj",
       "packagesPath": "C:\\Users\\Alico\\.nuget\\packages\\",
-      "outputPath": "I:\\Documents - google cloud\\GitHub repos\\HouseAssignment\\house\\obj\\",
+      "outputPath": "C:\\Users\\Alico\\My Drive\\Documents - google cloud\\GitHub repos\\HouseAssignment\\house\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
