@@ -602,17 +602,42 @@ internal class House
     private void CreateDefaultHouse()
     {
         
-        _rooms.Add(new Room("first room",5,7, 6, 16));
-        _rooms.Add(new Room("second room",20,4, 12));
-        _rooms.Add(new Room("third room",2, 12, 7, 7));
+        _rooms.Add(new Room("Bedroom",5,7, 6, 16));
+        _rooms.Add(new Room("Hallway",20,4, 12));
+        _rooms.Add(new Room("Bedroom closet",2, 12, 7, 7));
         
-        List<Item> playerItems = [new Item("cheese", 4, 4, "Your cheese")];
+        // player begins in the Bedroom (room 0)
+        List<Item> playerItems = [new Item("Pajamas", 4, 4, "")];
         Player = new Player(_rooms[0], 6, 8, playerItems);
         
+        // Door for bedroom closet and locked door to leave bedroom
+        new Door(_rooms[0], _rooms[2], 7, 12); 
         Door door1To2 = new Door(_rooms[0], _rooms[1], 20, 9, true);
-        new Door(_rooms[0], _rooms[2], 7, 12);
-        
-        List<Item> thirdRoomItems = [
+
+        List<Item> bedroomBed =
+        [
+            new("Bed00", 6, 9, "You bed's one pillow", false, ']'),
+            new("Bed01", 6, 10, "Your bed", false, '%'),
+            new("Bed10", 7, 9, "Your bed, it needs to be washed soon", false, '%'),
+            new("Bed11", 7, 10, "Your bed, its a single", false, '%'),
+            new("Bed20", 8, 9, "Your bed", false, '%'),
+            new("Bed21", 8, 10, "Your bed, it has white blankets", false, '%')
+        ]; // the bed
+
+        List<Item> bedroomItems =
+        [
+            new("Bedside Table", 6, 11, "A bedside table. It has a lamp on it", false),
+            new("Dressing Table0", 12, 11, "A dressing table", false),
+            new("Dressing Table1", 13, 11, "A dressing table", false),
+            new("Dirty clothes", 12, 8, "Your dirty clothes, clean up after yourself!"),
+            new Message("Door locked message", 19, 8, "You lock your bedroom door with a key in your closet safe")
+        ];
+        _rooms[0].SetItems(bedroomBed);
+        _rooms[0].AddItems(bedroomItems);
+
+
+        List<Item> thirdRoomItems =
+        [
             new("eggs", 3, 15, "An egg that is surprisingly egg shaped"),
             new Message("Message", 3, 14, "The code for the safe is \"Hello world\""),
             new Safe("Safe", 3, 16, new Key("Key", 3, 15, door1To2, "A key"), "This seems to be a safe", "Hello world")
@@ -685,6 +710,11 @@ internal class Room(string roomName, int xPosition, int yPosition, int height = 
     public void AddItem(Item item)
     {
         _items.Add(item);
+    }
+
+    public void AddItems(List<Item> items)
+    {
+        _items.AddRange(items);
     }
 
     public void RemoveItem(Item item)
