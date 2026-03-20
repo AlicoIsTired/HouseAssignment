@@ -3,6 +3,7 @@ using System;
 // ReSharper disable once RedundantUsingDirective
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace house;
 
@@ -476,11 +477,11 @@ internal class Player
     private readonly List<Item> _items;
     
     // ReSharper disable once ConvertToPrimaryConstructor
-    public Player(Room startRoom, int xPosition, int yPosition, List<Item>? items = null)
+    public Player(Room startRoom, int xPos, int yPos, List<Item>? items = null)
     {
         _currRoom = startRoom;
-        _x = xPosition;
-        _y = yPosition;
+        _x = xPos;
+        _y = yPos;
         _items = items ?? new List<Item>();
     }
 
