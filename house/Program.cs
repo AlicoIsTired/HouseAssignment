@@ -656,13 +656,13 @@ internal class House
 /// A room in the house
 /// </summary>
 /// <param name="roomName">The selected name of the room</param>
-internal class Room(string roomName, int xPosition, int yPosition, int height = 5, int length = 5)
+internal class Room(string roomName, int xPos, int yPos, int height = 5, int length = 5)
 {
     public readonly string RoomName = roomName;
     public readonly int Length = length;
     public readonly int Height = height;
-    public readonly int X = xPosition;
-    public readonly int Y = yPosition;
+    public readonly int X = xPos;
+    public readonly int Y = yPos;
     
     private readonly List<Door> _doors = [];
     private List<Item> _items = [];
@@ -760,10 +760,10 @@ internal class Door
 
     /// <param name="r1">where the door is</param>
     /// <param name="r2">where the door will lead</param>
-    /// <param name="xPosition">x coord of door</param>
-    /// <param name="yPosition">y coord of door</param>
+    /// <param name="xPos">x coord of door</param>
+    /// <param name="yPos">y coord of door</param>
     /// <param name="lockedQ">if the door cannot be opened, defaults to locked</param>
-    public Door(Room r1, Room r2, int xPosition, int yPosition, bool lockedQ = false)
+    public Door(Room r1, Room r2, int xPos, int yPos, bool lockedQ = false)
     {
         _lockedQ = lockedQ;
         _r1 = r1;
@@ -771,8 +771,8 @@ internal class Door
         _r1.AddDoor(this);
         _r2.AddDoor(this);
         
-        X = xPosition;
-        Y = yPosition;
+        X = xPos;
+        Y = yPos;
         
     }
     
