@@ -220,7 +220,7 @@ internal static class Program
 
     private static void ShelfInteract(Player player, Shelf shelf)
     {
-        WriteOffset("The shelf holds...", 2);
+        WriteOffset("It holds...", 2);
         int offsetY = WriteOptions(shelf.GetItemNames(), " : ", 3);
         WriteOffset("You are currently in possession of...", offsetY);
         offsetY = WriteOptions(player.GetItemNames(), " : ", offsetY + 1);
@@ -245,7 +245,7 @@ internal static class Program
                     Item selectedItem = playerItems[selectedItemInt];
                     player.RemoveItem(selectedItem);
                     shelf.AddItem(selectedItem);
-                    WriteOffset("--> Item added to shelf", offsetY, coloUr: OutputColoUr);
+                    WriteOffset("--> Item put down", offsetY, coloUr: OutputColoUr);
                 }
                 else
                 {
@@ -269,7 +269,7 @@ internal static class Program
                     Item selectedItem = shelfItems[itemInt];
                     player.AddItem(selectedItem);
                     shelf.RemoveItem(selectedItem);
-                    WriteOffset("--> Item taken from shelf", offsetY, coloUr: OutputColoUr);
+                    WriteOffset("--> Item taken", offsetY, coloUr: OutputColoUr);
                 }
                 else
                 {
@@ -667,16 +667,10 @@ internal class Key(string name, int xCoord, int yCoord, Door lockedDoor, string 
 internal class House
 {
     private readonly List<Room> _rooms = [];
-    public Player Player = null!;
+    public readonly Player Player;
     
-    
-    public House(bool defaultHouse = true)
-    {
-        if (defaultHouse) CreateDefaultHouse();
-    }
-
     [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
-    private void CreateDefaultHouse()
+    public House()
     {
         
         _rooms.Add(new Room("Hallway",20,4, 12));
@@ -703,15 +697,14 @@ internal class House
             new("Bed11", 7, 10, "Your bed, its a single", false, '%'),
             new("Bed20", 8, 9, "Your bed", false, '%'),
             new("Bed21", 8, 10, "Your bed, it has white blankets", false, '%')
-        ]; 
+        ];
         List<Item> bedroomItems =
         [
-            new("Bedside Table", 6, 11, "A bedside table. It has a lamp on it", false),
             new("Dressing Table0", 12, 11, "A dressing table", false),
             new("Dressing Table1", 13, 11, "A dressing table", false),
             new("Dirty clothes", 12, 8, "Your dirty clothes, clean up after yourself!"),
             new Message("Door locked message", 19, 8, "You lock your bedroom door with a key in your closet safe"),
-            new Shelf("Shelf1", 18, 8, "a")
+            new Shelf("Bedside table", 6, 11, "A bedside table.", '?')
         ];
         _rooms[1].SetItems(bedroomBed);
         _rooms[1].AddItems(bedroomItems);
@@ -749,6 +742,12 @@ internal class House
             new("Mirror", 16, 5, "It's a mirror. You look tired", false, ']')
         ];
         _rooms[3].SetItems(bathroomItems);
+        
+        _rooms.Add(new Room("", 20, 0, 5, 10));
+        new Door(_rooms[0], _rooms[4], 22, 4);
+        
+        _rooms.Add(new Room("", 24, 5, 5, 10));
+        new Door(_rooms[0], _rooms[5], 24, 6);
     }
 }
 
