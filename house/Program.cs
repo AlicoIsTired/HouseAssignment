@@ -200,6 +200,10 @@ internal static class Program
         {
             TrySafe(player, (Safe)item);
         }
+        else if (item.GetType() == typeof(Shelf))
+        {
+            ShelfInteract(player, (Shelf)item);
+        }
     }
 
     private static void TrySafe(Player player, Safe safe)
