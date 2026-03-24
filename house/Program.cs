@@ -572,6 +572,39 @@ internal class Safe(string name, int xCoord, int yCoord, Item contents, string t
     public readonly string Code = code;
 }
 
+internal class Shelf(string name, int xCoord, int yCoord, string text) : Item(name, xCoord, yCoord, text, false, '~')
+{
+    private readonly List<Item> _items = [];
+
+    public void AddItem(Item item)
+    {
+        _items.Add(item);
+    }
+    
+    public void RemoveItem(Item item)
+    {
+        _items.Remove(item);
+    }
+
+    public List<Item> GetItems()
+    {
+        return _items;
+    }
+
+    public string[] GetItemNames()
+    {
+        string[] itemNames = new string[_items.Count];
+        int i = 0;
+        foreach (Item o in _items)
+        {
+            itemNames[i] = o.Name;
+            i++;
+        }
+
+        return itemNames;
+    }
+}
+
 
 
 /// <summary>
