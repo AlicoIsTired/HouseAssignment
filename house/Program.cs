@@ -655,7 +655,20 @@ internal class House
         ];
         _rooms[0].SetItems(hallItems);
         
-        _rooms[2].SetItems(thirdRoomItems);
+        // bathroom
+        _rooms.Add(new Room("Bathroom", 15, 1, 7, 6));
+        new Door(_rooms[0], _rooms[3], 20, 5);
+
+        List<Item> bathroomItems =
+        [
+            new("bath0", 16, 2, "Your bath. For some reason you left it full of water", false),
+            new("bath1", 17, 2, "Your bath. For some reason you left it full of water", false),
+            new("bath2", 18, 2, "Your bath. For some reason you left it full of water", false),
+            
+            new("Toothpaste", 16, 4, "Weird mint flavoured paste..."),
+            new("Mirror", 16, 5, "It's a mirror. You look tired", false, ']')
+        ];
+        _rooms[3].SetItems(bathroomItems);
     }
 }
 
