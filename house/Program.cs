@@ -1,6 +1,5 @@
-﻿// ReSharper disable once RedundantUsingDirective
+﻿// ReSharper disable RedundantUsingDirective
 using System;
-// ReSharper disable once RedundantUsingDirective
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -123,19 +122,12 @@ internal static class Program
                     WriteOffset("help - h - list commands" +
                                 "\nmovement - w/a/s/d - move the player and interact" +
                                 "\nlist doors - l - list doors of current room" +
-                                "\nmove - m - move rooms" +
                                 "\nfind items - f - search for items in the room" + 
                                 "\nquit - q - leave the program");
                     break;
                 
                 case "l":
                     WriteOptions(player.GetRoom().GetDoorNames(), " : Leads to ");
-                    break;
-                
-                case "m":
-                    MoveRoom(player);
-                    DrawRoom(player.GetRoom());
-                    Draw();
                     break;
                 
                 case "f":
@@ -225,7 +217,68 @@ internal static class Program
         }
         WriteOffset("The safe does not open, the code must be wrong", 3, coloUr:  OutputColoUr);
     }
-    
+
+    private static void ShelfInteract(Player player, Shelf shelf)
+    {
+        WriteOffset("The shelf holds...", 2);
+        int offsetY = WriteOptions(shelf.GetItemNames(), " : ", 3);
+        WriteOffset("You are currently in possession of...", offsetY);
+        offsetY = WriteOptions(player.GetItemNames(), " : ", offsetY + 1);
+        string message = "Put down, pick up item, or cancel? (1/2/3): ";
+        WriteOffset(message, offsetY);
+        string selected = Input(offsetY: offsetY, offsetX: message.Length + SidebarPosition, singleCharQ: true);
+        offsetY++;
+        
+        switch  (selected)
+        {
+            case "1": // Add item to shelf
+                message = "Which item?: ";
+                WriteOffset(message, offsetY);
+                string selectedItemString = Input(offsetY: offsetY, offsetX: message.Length + SidebarPosition, singleCharQ: true);
+                offsetY++;
+                
+                bool q = int.TryParse(selectedItemString, out int selectedItemInt);
+                
+                List<Item> playerItems = player.GetItems();
+                if (q && selectedItemInt < playerItems.Count)
+                {
+                    Item selectedItem = playerItems[selectedItemInt];
+                    player.RemoveItem(selectedItem);
+                    shelf.AddItem(selectedItem);
+                    WriteOffset("--> Item added to shelf", offsetY, coloUr: OutputColoUr);
+                }
+                else
+                {
+                    
+                    WriteOffset("--> Failed", offsetY, coloUr: OutputColoUr);
+                }
+
+                break;
+            
+            case "2": // remove item from shelf
+                message = "Which item?: ";
+                WriteOffset(message, offsetY);
+                string itemString = Input(offsetY: offsetY, offsetX: message.Length + SidebarPosition, singleCharQ: true);
+                offsetY++;
+                
+                bool parse = int.TryParse(itemString, out int itemInt);
+                
+                List<Item> shelfItems = shelf.GetItems();
+                if (parse && itemInt < shelfItems.Count)
+                {
+                    Item selectedItem = shelfItems[itemInt];
+                    player.AddItem(selectedItem);
+                    shelf.RemoveItem(selectedItem);
+                    WriteOffset("--> Item taken from shelf", offsetY, coloUr: OutputColoUr);
+                }
+                else
+                {
+                    
+                    WriteOffset("--> Failed", offsetY, coloUr: OutputColoUr);
+                }
+                break;
+        }
+    }
     
     /// <summary>
     /// Attempts to go through door, if locked, tries to unlock it with a key.
@@ -338,43 +391,19 @@ internal static class Program
     /// <returns></returns>
     private static int WriteOptions(string[] names, string text,  int offsetY = 1)
     {
+        if (names.Length == 0)
+        {   
+            WriteOffset("Nothing", offsetY);
+            offsetY++;
+            return offsetY;
+        }
         foreach (string name in names)
         {
             WriteOffset((Array.IndexOf(names, name) + text + name), offsetY);
-            offsetY += 1;
+            offsetY++;
         }
         return offsetY;
     }
-
-    
-    /// <summary>
-    /// move room using command
-    /// </summary>
-    /// <param name="player"></param>
-    private static void MoveRoom(Player player)
-    {
-        Room currRoom = player.GetRoom();
-        // get wanted room and write
-        WriteOffset("Your current door options are:");
-        int offsetY = WriteOptions(currRoom.GetDoorNames(), " : Leads to ", 2);
-        
-        // give player choice
-        string message = "What door would you like to open (X to cancel)?: ";
-        WriteOffset(message, offsetY);
-        string selected = Input(offsetY: offsetY, offsetX: message.Length + SidebarPosition);
-        offsetY++;
-        
-        // try and enter room
-        Room newRoomQ = currRoom.FromRoomUseDoor(selected);
-        if  (newRoomQ != null!)
-        {
-            player.SetRoom(newRoomQ);
-            WriteOffset(("Moved to: " + newRoomQ.RoomName), offsetY, coloUr: OutputColoUr );
-        }
-        else if (selected.ToLower() == "x") WriteOffset(" --> Cancelled", offsetY, coloUr: OutputColoUr);
-        else WriteOffset(" --> Failed", offsetY, coloUr: OutputColoUr);
-    }
-    
     
     /// <summary>
     /// clear and put middle line down
@@ -561,6 +590,11 @@ internal class Item(string name, int xCoord, int yCoord, string text, bool picku
     public readonly char Symbol = symbol;
 }
 
+
+
+/// <summary>
+/// Message box
+/// </summary>
 internal class Message(string name, int xCoord, int yCoord, string text) : Item(name, xCoord, yCoord, text, false, '=') {}
 
 
@@ -576,7 +610,12 @@ internal class Safe(string name, int xCoord, int yCoord, Item contents, string t
     public readonly string Code = code;
 }
 
-internal class Shelf(string name, int xCoord, int yCoord, string text) : Item(name, xCoord, yCoord, text, false, '~')
+
+
+/// <summary>
+/// A shelf that items can be stored on
+/// </summary>
+internal class Shelf(string name, int xCoord, int yCoord, string text, char symbol = '~') : Item(name, xCoord, yCoord, text, false, symbol)
 {
     private readonly List<Item> _items = [];
 
@@ -640,41 +679,45 @@ internal class House
     private void CreateDefaultHouse()
     {
         
-        _rooms.Add(new Room("Bedroom",5,7, 6, 16));
         _rooms.Add(new Room("Hallway",20,4, 12));
+        _rooms.Add(new Room("Bedroom",5,7, 6, 16));
         _rooms.Add(new Room("Bedroom closet", 5, 12, 4, 6));
         
-        // player begins in the Bedroom (room 0)
-        List<Item> playerItems = [new Item("Pajamas", 4, 4, "")];
-        Player = new Player(_rooms[0], 6, 8, playerItems);
+        // player begins in the Bedroom (room 1)
+        List<Item> playerItems =
+        [
+            new Item("Pajamas", 4, 4, "")
+        ];
+        Player = new Player(_rooms[1], 6, 8, playerItems);
         
         // Door for bedroom closet and locked door to leave bedroom
-        new Door(_rooms[0], _rooms[2], 7, 12); 
+        new Door(_rooms[1], _rooms[2], 7, 12); 
         Door door1To2 = new Door(_rooms[0], _rooms[1], 20, 9, true);
 
+        // Bedroom items
         List<Item> bedroomBed =
         [
             new("Bed00", 6, 9, "You bed's one pillow", false, ']'),
-            new("Bed01", 6, 10, "Your bed", false, '%'),
+            new("Bed01", 6, 10, "Your bed", false, ']'),
             new("Bed10", 7, 9, "Your bed, it needs to be washed soon", false, '%'),
             new("Bed11", 7, 10, "Your bed, its a single", false, '%'),
             new("Bed20", 8, 9, "Your bed", false, '%'),
             new("Bed21", 8, 10, "Your bed, it has white blankets", false, '%')
-        ]; // the bed
-
+        ]; 
         List<Item> bedroomItems =
         [
             new("Bedside Table", 6, 11, "A bedside table. It has a lamp on it", false),
             new("Dressing Table0", 12, 11, "A dressing table", false),
             new("Dressing Table1", 13, 11, "A dressing table", false),
             new("Dirty clothes", 12, 8, "Your dirty clothes, clean up after yourself!"),
-            new Message("Door locked message", 19, 8, "You lock your bedroom door with a key in your closet safe")
+            new Message("Door locked message", 19, 8, "You lock your bedroom door with a key in your closet safe"),
+            new Shelf("Shelf1", 18, 8, "a")
         ];
-        _rooms[0].SetItems(bedroomBed);
-        _rooms[0].AddItems(bedroomItems);
+        _rooms[1].SetItems(bedroomBed);
+        _rooms[1].AddItems(bedroomItems);
 
-
-        List<Item> thirdRoomItems =
+        // closet items
+        List<Item> closetItems =
         [
             new("clothes1", 7, 14, "Some clean clothes", false),
             new("clothes2", 9, 13, "Some clean clothes", false),
