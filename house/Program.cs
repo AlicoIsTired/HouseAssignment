@@ -645,6 +645,15 @@ internal class House
             new Message("Message", 8, 14, "The code for the safe is \"Hello world\""),
             new Safe("Safe", 6, 14, new Key("Key", 0, 0, door1To2, "A key"), "This seems to be a safe", "Hello world")
         ];
+        _rooms[2].SetItems(closetItems);
+
+        // hall items
+        List<Item> hallItems =
+        [
+            new("Hall Table", 21, 14, "A table.", false),
+            new Message("Painting", 24, 11, "A painting, it has a price sticker... \"£5.99\"")
+        ];
+        _rooms[0].SetItems(hallItems);
         
         _rooms[2].SetItems(thirdRoomItems);
     }
