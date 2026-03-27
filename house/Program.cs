@@ -106,7 +106,7 @@ internal static class Program
 
                         case '-':
                         case '|':
-                            UseDoor(player, selectedX, selectedY);
+                            TryDoor(player, selectedX, selectedY);
                             break;
 
                         case WallSymbol:
@@ -155,7 +155,7 @@ internal static class Program
         } while (repeat);
     }
 
-    private static void UseDoor(Player  player, int selectedX, int selectedY)
+    private static void TryDoor(Player  player, int selectedX, int selectedY)
     {
         Door door = null!;
         foreach (Door d in player.GetRoom().GetDoors()) // get targeted door
@@ -475,12 +475,6 @@ internal static class Program
 
 
 
-internal class Run{
-}
-
-
-
-
 /// <summary>
 /// The player, contains its position and items
 /// </summary>
@@ -688,7 +682,7 @@ internal class House
             new("Dressing Table0", 12, 11, "A dressing table", false),
             new("Dressing Table1", 13, 11, "A dressing table", false),
             new("Dirty clothes", 12, 8, "Your dirty clothes, clean up after yourself!"),
-            new Message("Door locked message", 19, 8, "You lock your bedroom door with a key in your closet safe"),
+            new Message("Door locked message", 19, 8, "You unlock your bedroom door with a key in your closet safe"),
             new Shelf("Bedside table", 6, 11, "A bedside table.", '?')
         ];
         _rooms[1].SetItems(bedroomBed);
@@ -758,21 +752,6 @@ internal class Room(string roomName, int xPos, int yPos, int height = 5, int len
         _doors.Add(d);
     }
     
-    /// <summary>
-    /// moves room 
-    /// </summary>
-    /// <param name="d">integer, the index of the door to be opened (see GetDoors())</param>
-    /// <returns>returns room the door led to, if error, null</returns>
-    public Room FromRoomUseDoor(string d)
-    {
-        bool isIntQ = int.TryParse(d, out int doorInt);
-        if (isIntQ && _doors.Count != 0 && doorInt >= 0)
-        {
-            return _doors[doorInt].UseDoor(this);
-        }
-
-        return null!;
-    }
 
     public List<Door> GetDoors()
     {
@@ -867,11 +846,6 @@ internal class Door
         return r == _r1 ? _r2 : _r1; // unlocking door is handled in TryDoor() in Program
     }
 
-    public void SetLockedQ(bool lockedQ)
-    {
-        _lockedQ = lockedQ;
-    }
-
 
     /// <summary>
     /// Attempts to go through door, if locked, tries to unlock it with a key.
@@ -902,7 +876,7 @@ internal class Door
             }
         }
 
-        player.SetRoom(UseDoor(player.GetRoom())); // set player room
+        player.SetRoom(player.GetRoom() == _r1 ? _r2 : _r1); // set player room
         Program.DrawRoom(player.GetRoom());
 
         if (player.GetCoords().X > newX) Program.MovePlayer(player, newX - 1, newY); // if door to the left
