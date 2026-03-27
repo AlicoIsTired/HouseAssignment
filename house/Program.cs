@@ -23,6 +23,10 @@ internal static class Program
 
     private static void Main()
     {
+        
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+        
+        
 #pragma warning disable CA1416
         Console.WindowWidth = SidebarPosition + SidebarWidth;
 #pragma warning restore CA1416
@@ -102,7 +106,7 @@ internal static class Program
 
                         case '-':
                         case '|':
-                            player.TryDoor(player, selectedX, selectedY);
+                            UseDoor(player, selectedX, selectedY);
                             break;
 
                         case WallSymbol:
@@ -151,6 +155,21 @@ internal static class Program
         } while (repeat);
     }
 
+    private static void UseDoor(Player  player, int selectedX, int selectedY)
+    {
+        Door door = null!;
+        foreach (Door d in player.GetRoom().GetDoors()) // get targeted door
+        {
+            if (d.X == selectedX && d.Y == selectedY)
+            {
+                door = d;
+            }
+        }
+        
+        door.TryDoor(player, selectedX, selectedY);
+    }
+    
+    
     /// <summary>
     /// interacts with an item, if it can be picked up, gives the player the option to pick it up
     /// </summary>
@@ -456,6 +475,12 @@ internal static class Program
 
 
 
+internal class Run{
+}
+
+
+
+
 /// <summary>
 /// The player, contains its position and items
 /// </summary>
@@ -529,50 +554,7 @@ internal class Player
     }
     
     
-    /// <summary>
-    /// Attempts to go through door, if locked, tries to unlock it with a key.
-    /// </summary>
-    /// <param name="player">The player</param>
-    /// <param name="newX">X of the door</param>
-    /// <param name="newY">Y of the door</param>
-    public void TryDoor(Player player, int newX, int newY)
-    {
-        Door door = null!;
-        foreach(Door d in player.GetRoom().GetDoors()) // get targeted door
-        {
-            if (d.X == newX && d.Y == newY)
-            {
-                door = d;
-            }
-        }
-
-        if (door.GetLockedQ()) // if door locked, try to use a key, else cancel movement
-        {
-            foreach (Key k in player.GetItems().OfType<Key>())
-            {
-                if (k.LockedDoor == door)
-                {
-                    player.RemoveItem(k);
-                    door.SetLockedQ(false);
-                    Program.WriteOffset("Door unlocked!");
-                    break;
-                }
-            }
-            if (door.GetLockedQ())
-            {
-                Program.WriteOffset("This door is locked. Maybe find a key first");
-                return;
-            }
-        }
-        
-        player.SetRoom(door.UseDoor(player.GetRoom())); // set player room
-        Program.DrawRoom(player.GetRoom());
-        
-        if (player.GetCoords().X > newX) Program.MovePlayer(player, newX - 1, newY); // if door to the left
-        else if (player.GetCoords().X < newX) Program.MovePlayer(player, newX + 1, newY); // if door to the right
-        else if (player.GetCoords().Y < newY) Program.MovePlayer(player, newX, newY + 1); // if door to the top
-        else if (player.GetCoords().Y > newY) Program.MovePlayer(player, newX, newY - 1); // if door to the bottom
-    }
+    
 }
 
 
@@ -890,8 +872,42 @@ internal class Door
         _lockedQ = lockedQ;
     }
 
-    public bool GetLockedQ()
+
+    /// <summary>
+    /// Attempts to go through door, if locked, tries to unlock it with a key.
+    /// </summary>
+    /// <param name="player">The player</param>
+    /// <param name="newX">X of the door</param>
+    /// <param name="newY">Y of the door</param>
+    public void TryDoor(Player player, int newX, int newY)
     {
-        return _lockedQ;
+
+        if (_lockedQ) // if door locked, try to use a key, else cancel movement
+        {
+            foreach (Key k in player.GetItems().OfType<Key>())
+            {
+                if (k.LockedDoor == this)
+                {
+                    player.RemoveItem(k);
+                    _lockedQ = false;
+                    Program.WriteOffset("Door unlocked!");
+                    break;
+                }
+            }
+
+            if (_lockedQ)
+            {
+                Program.WriteOffset("This door is locked. Maybe find a key first");
+                return;
+            }
+        }
+
+        player.SetRoom(UseDoor(player.GetRoom())); // set player room
+        Program.DrawRoom(player.GetRoom());
+
+        if (player.GetCoords().X > newX) Program.MovePlayer(player, newX - 1, newY); // if door to the left
+        else if (player.GetCoords().X < newX) Program.MovePlayer(player, newX + 1, newY); // if door to the right
+        else if (player.GetCoords().Y < newY) Program.MovePlayer(player, newX, newY + 1); // if door to the top
+        else if (player.GetCoords().Y > newY) Program.MovePlayer(player, newX, newY - 1); // if door to the bottom
     }
 }
