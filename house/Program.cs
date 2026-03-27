@@ -11,12 +11,15 @@ internal static class Program
     private const int Height = 20;
     private const int MapWidth = 59;
     private const int BarPosition = 60; 
+    
     public const int SidebarPosition = 62;
+    
     private const int SidebarWidth = 57;
     private const ConsoleColor InputColoUr = ConsoleColor.DarkRed;
-    public const ConsoleColor OutputColoUr = ConsoleColor.Yellow;
-    private static readonly char[,] Map = new char[MapWidth, Height];
     
+    public const ConsoleColor OutputColoUr = ConsoleColor.Yellow;
+    
+    private static readonly char[,] Map = new char[MapWidth, Height];
     private const char WallSymbol = '#';
     private const char PlayerSymbol = 'O';
     
@@ -27,34 +30,14 @@ internal static class Program
 #pragma warning disable CA1416
         Console.WindowWidth = SidebarPosition + SidebarWidth;
 #pragma warning restore CA1416
-        string run;
-        House house;
-        Player player;
         
-        // decide what to do
-        do
-        {
-            Console.Write("build house, or run (use h while running for command list): ");
-            run = Console.ReadLine()!;
-        } while (run.ToLower() != "run" && run.ToLower() != "build" && 
-                 run.ToLower() != "r" &&  run.ToLower() != "b");
+        House house = new House();
+        Player player = house.Player;
         
+        Console.Write("TEXT GOES HERE ");
+        Console.ReadKey(true);
         
-        
-        // run, or build then run, build currently does nothing
-        if (run.ToLower() == "build" || run.ToLower() == "b")
-        {
-            WriteOffset("Nothing here yet!");
-            house = new House();
-            player = house.Player;
-        }
-        else
-        {
-            house = new House();
-            player = house.Player;
-        }
-        
-        // set up the uhh line in the middle
+        // set up the uhh line in the middle and run
         Setup(player);
         Run(player);
     }
@@ -261,7 +244,6 @@ internal static class Program
     private static void Setup(Player player)
     {
         Console.Clear();
-        WriteOffset("Map here maybe", 4, 20);
         for (int i = 0; i < Height; i++)
         {
             WriteOffset("/", i, BarPosition);
@@ -747,7 +729,7 @@ internal class House
         _rooms.Add(new Room("", 20, 0, 5, 10));
         new Door(_rooms[0], _rooms[4], 22, 4);
         
-        _rooms.Add(new Room("", 24, 5, 5, 10));
+        _rooms.Add(new Room("", 24, 4, 5, 10));
         new Door(_rooms[0], _rooms[5], 24, 6);
     }
 }
