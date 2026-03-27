@@ -40,9 +40,15 @@ internal static class Program
         // set up the uhh line in the middle and run
         Setup(player);
         Run(player);
+        CalculateScore(house);
     }
-    
-    
+
+    private static void CalculateScore(House house)
+    {
+        // TODO: scores based on doors unlocked, items moved + held, etc
+        house.GetDoors();
+    }
+
     /// <summary>
     /// running the house
     /// </summary>
@@ -650,6 +656,7 @@ internal class Key(string name, int xCoord, int yCoord, Door lockedDoor, string 
 internal class House
 {
     private readonly List<Room> _rooms = [];
+    private readonly List<Door> _doors = [];
     public readonly Player Player;
     
     [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
@@ -668,8 +675,8 @@ internal class House
         Player = new Player(_rooms[1], 6, 8, playerItems);
         
         // Door for bedroom closet and locked door to leave bedroom
-        new Door(_rooms[1], _rooms[2], 7, 12); 
-        Door door1To2 = new Door(_rooms[0], _rooms[1], 20, 9, true);
+        _doors.Add(new Door(_rooms[1], _rooms[2], 7, 12)); 
+        _doors.Add(new Door(_rooms[0], _rooms[1], 20, 9, true));
 
         // Bedroom items
         List<Item> bedroomBed =
@@ -699,7 +706,7 @@ internal class House
             new("clothes2", 9, 13, "Some clean clothes", false),
             new("clothes3", 9, 14, "Some clean clothes", false),
             new Message("Message", 8, 14, "The code for the safe is \"Hello world\""),
-            new Safe("Safe", 6, 14, new Key("Key", 0, 0, door1To2, "A key"), "This seems to be a safe", "Hello world")
+            new Safe("Safe", 6, 14, new Key("Key", 0, 0, _doors[1], "A key"), "This seems to be a safe", "Hello world")
         ];
         _rooms[2].SetItems(closetItems);
 
@@ -713,7 +720,7 @@ internal class House
         
         // bathroom
         _rooms.Add(new Room("Bathroom", 15, 1, 7, 6));
-        new Door(_rooms[0], _rooms[3], 20, 5);
+        _doors.Add(new Door(_rooms[0], _rooms[3], 20, 5));
 
         List<Item> bathroomItems =
         [
@@ -727,10 +734,15 @@ internal class House
         _rooms[3].SetItems(bathroomItems);
         
         _rooms.Add(new Room("", 20, 0, 5, 10));
-        new Door(_rooms[0], _rooms[4], 22, 4);
+        _doors.Add(new Door(_rooms[0], _rooms[4], 22, 4));
         
         _rooms.Add(new Room("", 24, 4, 5, 10));
-        new Door(_rooms[0], _rooms[5], 24, 6);
+        _doors.Add(new Door(_rooms[0], _rooms[5], 24, 6));
+    }
+
+    public List<Door> GetDoors()
+    {
+        return _doors;
     }
 }
 
