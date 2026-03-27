@@ -193,7 +193,7 @@ internal static class Program
                 item = i;
             }
         }
-        item.InteractWithItem(player, itemX, itemY, lastMovementDirection);
+        item.InteractWithItem(player, lastMovementDirection);
     }
     
 
@@ -449,14 +449,13 @@ internal class Item(string name, int xCoord, int yCoord, string text, bool picku
     public int X = xCoord;
     public int Y = yCoord;
     protected readonly string Text = text;
-    private readonly bool _pickupQ = pickupQ;
     public readonly char Symbol = symbol;
 
-    public virtual void InteractWithItem(Player player, int selectedX, int selectedY, string lastMovementDirection)
+    public virtual void InteractWithItem(Player player, string lastMovementDirection)
     {
         Program.WriteOffset(Text);
         
-        if (_pickupQ) // ask to pick up the item
+        if (pickupQ) // ask to pick up the item
         {
             string pickupRequest = "This item can be picked up. Pick up? (y/N): ";
             Program.WriteOffset(pickupRequest, 2);
@@ -483,7 +482,7 @@ internal class Item(string name, int xCoord, int yCoord, string text, bool picku
 /// </summary>
 internal class Message(string name, int xCoord, int yCoord, string text) : Item(name, xCoord, yCoord, text, true, '=')
 {
-    public override void InteractWithItem(Player player, int selectedX, int selectedY, string lastMovementDirection)
+    public override void InteractWithItem(Player player, string lastMovementDirection)
     {
         Program.WriteOffset(Text);
     }
@@ -498,10 +497,7 @@ internal class Message(string name, int xCoord, int yCoord, string text) : Item(
 /// <param name="code">the code that must be inputted to open it</param>
 internal class Safe(string name, int xCoord, int yCoord, Item contents, string text, string code) : Item(name, xCoord, yCoord, text, false, '@')
 {
-    private readonly Item _contents = contents;
-    private readonly string _code = code;
-    
-    public override void InteractWithItem(Player player, int selectedX, int selectedY, string lastMovementDirection)
+    public override void InteractWithItem(Player player, string lastMovementDirection)
     {
         Program.WriteOffset(Text);
         
@@ -513,12 +509,12 @@ internal class Safe(string name, int xCoord, int yCoord, Item contents, string t
         string codeRequest = "Input the safe's code: ";
         Program.WriteOffset(codeRequest, 2);
         string inputtedCode = Program.Input(false, 2, codeRequest.Length + Program.SidebarPosition);
-        if (inputtedCode == _code)
+        if (inputtedCode == code)
         {
-            _contents.X = X; // ensure item will be placed at safe, not really needed
-            _contents.Y = Y;
+            contents.X = X; // ensure item will be placed at safe, not really needed
+            contents.Y = Y;
             player.GetRoom().RemoveItem(this);
-            player.GetRoom().AddItem(_contents);
+            player.GetRoom().AddItem(contents);
             
             Program.DrawRoom(player.GetRoom());
             Program.Draw();
@@ -538,7 +534,7 @@ internal class Shelf(string name, int xCoord, int yCoord, string text, char symb
 {
     private readonly List<Item> _items = [];
 
-    public override void InteractWithItem(Player player, int selectedX, int selectedY, string lastMovementDirection)
+    public override void InteractWithItem(Player player, string lastMovementDirection)
     {
         Program.WriteOffset(Text);
         
