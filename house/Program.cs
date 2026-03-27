@@ -10,11 +10,11 @@ internal static class Program
 {
     private const int Height = 20;
     private const int MapWidth = 59;
-    private const int BarPosition = 60;
-    private const int SidebarPosition = 62;
+    private const int BarPosition = 60; 
+    public const int SidebarPosition = 62;
     private const int SidebarWidth = 57;
     private const ConsoleColor InputColoUr = ConsoleColor.DarkRed;
-    private const ConsoleColor OutputColoUr = ConsoleColor.Yellow;
+    public const ConsoleColor OutputColoUr = ConsoleColor.Yellow;
     private static readonly char[,] Map = new char[MapWidth, Height];
     
     private const char WallSymbol = '#';
@@ -23,10 +23,7 @@ internal static class Program
 
     private static void Main()
     {
-        
         Console.OutputEncoding = System.Text.Encoding.UTF8;
-        
-        
 #pragma warning disable CA1416
         Console.WindowWidth = SidebarPosition + SidebarWidth;
 #pragma warning restore CA1416
@@ -174,131 +171,22 @@ internal static class Program
     /// interacts with an item, if it can be picked up, gives the player the option to pick it up
     /// </summary>
     /// <param name="player">player</param>
-    /// <param name="selectedX">Item location X</param>
-    /// <param name="selectedY">Item location Y</param>
-    /// <param name="selectedOption">Used to pick up item if walked into again (if possible)</param>
-    private static void ItemInteract(Player player, int selectedX, int selectedY, string selectedOption)
+    /// <param name="itemX">Item location X</param>
+    /// <param name="itemY">Item location Y</param>
+    /// <param name="lastMovementDirection">Used to pick up item if walked into again (if possible)</param>
+    private static void ItemInteract(Player player, int itemX, int itemY, string lastMovementDirection)
     {
         Item item = null!;
         foreach(Item i in player.GetRoom().GetItems()) // get targeted item
         {
-            if (i.X == selectedX && i.Y == selectedY)
+            if (i.X == itemX && i.Y == itemY)
             {
                 item = i;
             }
         }
-        
-        WriteOffset(item.Text);
-        
-        
-        if (item.PickupQ) // ask to pick up the item
-        {
-            string pickupRequest = "This item can be picked up. Pick up? (y/N): ";
-            WriteOffset(pickupRequest, 2);
-            
-            string playerOption = Input(offsetY: 2, offsetX: pickupRequest.Length + SidebarPosition, singleCharQ: true).ToLower();
-
-            if (playerOption == "y" || playerOption == selectedOption)
-            {
-                player.AddItem(item);
-                player.GetRoom().RemoveItem(item);
-                DrawRoom(player.GetRoom());
-                Draw();
-            }
-            
-        }
-        else if (item.GetType() == typeof(Safe)) // no safe can be picked up so else can be used
-        {
-            TrySafe(player, (Safe)item);
-        }
-        else if (item.GetType() == typeof(Shelf))
-        {
-            ShelfInteract(player, (Shelf)item);
-        }
+        item.InteractWithItem(player, itemX, itemY, lastMovementDirection);
     }
-
-    private static void TrySafe(Player player, Safe safe)
-    {
-        string codeRequest = "Input the safe's code: ";
-        WriteOffset(codeRequest, 2);
-        string inputtedCode = Input(false, 2, codeRequest.Length + SidebarPosition);
-        if (inputtedCode == safe.Code)
-        {
-            safe.Contents.X = safe.X; // ensure item will be placed at safe, not really needed
-            safe.Contents.Y = safe.Y;
-            player.GetRoom().RemoveItem(safe);
-            player.GetRoom().AddItem(safe.Contents);
-            
-            DrawRoom(player.GetRoom());
-            Draw();
-            WriteOffset("This safe has been opened!", 3, coloUr:  OutputColoUr);
-            return;
-        }
-        WriteOffset("The safe does not open, the code must be wrong", 3, coloUr:  OutputColoUr);
-    }
-
-    private static void ShelfInteract(Player player, Shelf shelf)
-    {
-        WriteOffset("It holds...", 2);
-        int offsetY = WriteOptions(shelf.GetItemNames(), " : ", 3);
-        WriteOffset("You are currently in possession of...", offsetY);
-        offsetY = WriteOptions(player.GetItemNames(), " : ", offsetY + 1);
-        string message = "Put down, pick up item, or cancel? (1/2/3): ";
-        WriteOffset(message, offsetY);
-        string selected = Input(offsetY: offsetY, offsetX: message.Length + SidebarPosition, singleCharQ: true);
-        offsetY++;
-        
-        switch  (selected)
-        {
-            case "1": // Add item to shelf
-                message = "Which item?: ";
-                WriteOffset(message, offsetY);
-                string selectedItemString = Input(offsetY: offsetY, offsetX: message.Length + SidebarPosition, singleCharQ: true);
-                offsetY++;
-                
-                bool q = int.TryParse(selectedItemString, out int selectedItemInt);
-                
-                List<Item> playerItems = player.GetItems();
-                if (q && selectedItemInt < playerItems.Count)
-                {
-                    Item selectedItem = playerItems[selectedItemInt];
-                    player.RemoveItem(selectedItem);
-                    shelf.AddItem(selectedItem);
-                    WriteOffset("--> Item put down", offsetY, coloUr: OutputColoUr);
-                }
-                else
-                {
-                    
-                    WriteOffset("--> Failed", offsetY, coloUr: OutputColoUr);
-                }
-
-                break;
-            
-            case "2": // remove item from shelf
-                message = "Which item?: ";
-                WriteOffset(message, offsetY);
-                string itemString = Input(offsetY: offsetY, offsetX: message.Length + SidebarPosition, singleCharQ: true);
-                offsetY++;
-                
-                bool parse = int.TryParse(itemString, out int itemInt);
-                
-                List<Item> shelfItems = shelf.GetItems();
-                if (parse && itemInt < shelfItems.Count)
-                {
-                    Item selectedItem = shelfItems[itemInt];
-                    player.AddItem(selectedItem);
-                    shelf.RemoveItem(selectedItem);
-                    WriteOffset("--> Item taken", offsetY, coloUr: OutputColoUr);
-                }
-                else
-                {
-                    
-                    WriteOffset("--> Failed", offsetY, coloUr: OutputColoUr);
-                }
-                break;
-        }
-    }
-
+    
 
     public static void MovePlayer(Player player, int newX, int newY) // WARNING: if door pressed against edge (somehow) room will be set but not location
     {
@@ -564,9 +452,32 @@ internal class Item(string name, int xCoord, int yCoord, string text, bool picku
     public readonly string Name = name;
     public int X = xCoord;
     public int Y = yCoord;
-    public readonly string Text = text;
-    public readonly bool PickupQ = pickupQ;
+    protected readonly string Text = text;
+    private readonly bool _pickupQ = pickupQ;
     public readonly char Symbol = symbol;
+
+    public virtual void InteractWithItem(Player player, int selectedX, int selectedY, string lastMovementDirection)
+    {
+        Program.WriteOffset(Text);
+        
+        if (_pickupQ) // ask to pick up the item
+        {
+            string pickupRequest = "This item can be picked up. Pick up? (y/N): ";
+            Program.WriteOffset(pickupRequest, 2);
+            
+            string playerOption = Program.Input(offsetY: 2, offsetX: pickupRequest.Length + Program.SidebarPosition, singleCharQ: true).ToLower();
+
+            if (playerOption == "y" || playerOption == lastMovementDirection)
+            {
+                player.AddItem(this);
+                player.GetRoom().RemoveItem(this);
+                Program.DrawRoom(player.GetRoom());
+                Program.Draw();
+            }
+            
+        } 
+        
+    }
 }
 
 
@@ -574,7 +485,13 @@ internal class Item(string name, int xCoord, int yCoord, string text, bool picku
 /// <summary>
 /// Message box
 /// </summary>
-internal class Message(string name, int xCoord, int yCoord, string text) : Item(name, xCoord, yCoord, text, false, '=') {}
+internal class Message(string name, int xCoord, int yCoord, string text) : Item(name, xCoord, yCoord, text, true, '=')
+{
+    public override void InteractWithItem(Player player, int selectedX, int selectedY, string lastMovementDirection)
+    {
+        Program.WriteOffset(Text);
+    }
+}
 
 
 
@@ -585,8 +502,35 @@ internal class Message(string name, int xCoord, int yCoord, string text) : Item(
 /// <param name="code">the code that must be inputted to open it</param>
 internal class Safe(string name, int xCoord, int yCoord, Item contents, string text, string code) : Item(name, xCoord, yCoord, text, false, '@')
 {
-    public readonly Item Contents = contents;
-    public readonly string Code = code;
+    private readonly Item _contents = contents;
+    private readonly string _code = code;
+    
+    public override void InteractWithItem(Player player, int selectedX, int selectedY, string lastMovementDirection)
+    {
+        Program.WriteOffset(Text);
+        
+        TrySafe(player);
+    }
+    
+    private void TrySafe(Player player)
+    {
+        string codeRequest = "Input the safe's code: ";
+        Program.WriteOffset(codeRequest, 2);
+        string inputtedCode = Program.Input(false, 2, codeRequest.Length + Program.SidebarPosition);
+        if (inputtedCode == _code)
+        {
+            _contents.X = X; // ensure item will be placed at safe, not really needed
+            _contents.Y = Y;
+            player.GetRoom().RemoveItem(this);
+            player.GetRoom().AddItem(_contents);
+            
+            Program.DrawRoom(player.GetRoom());
+            Program.Draw();
+            Program.WriteOffset("This safe has been opened!", 3, coloUr:  Program.OutputColoUr);
+            return;
+        }
+        Program.WriteOffset("The safe does not open, the code must be wrong", 3, coloUr:  Program.OutputColoUr);
+    }
 }
 
 
@@ -598,22 +542,92 @@ internal class Shelf(string name, int xCoord, int yCoord, string text, char symb
 {
     private readonly List<Item> _items = [];
 
-    public void AddItem(Item item)
+    public override void InteractWithItem(Player player, int selectedX, int selectedY, string lastMovementDirection)
+    {
+        Program.WriteOffset(Text);
+        
+        ShelfInteract(player);
+    }
+    
+    private void ShelfInteract(Player player)
+    {
+        Program.WriteOffset("It holds...", 2);
+        int offsetY = Program.WriteOptions(GetItemNames(), " : ", 3);
+        Program.WriteOffset("You are currently in possession of...", offsetY);
+        offsetY = Program.WriteOptions(player.GetItemNames(), " : ", offsetY + 1);
+        string message = "Put down, pick up item, or cancel? (1/2/3): ";
+        Program.WriteOffset(message, offsetY);
+        string selected = Program.Input(offsetY: offsetY, offsetX: message.Length + Program.SidebarPosition, singleCharQ: true);
+        offsetY++;
+        
+        switch  (selected)
+        {
+            case "1": // Add item to shelf
+                message = "Which item?: ";
+                Program.WriteOffset(message, offsetY);
+                string selectedItemString = Program.Input(offsetY: offsetY, offsetX: message.Length + Program.SidebarPosition, singleCharQ: true);
+                offsetY++;
+                
+                bool q = int.TryParse(selectedItemString, out int selectedItemInt);
+                
+                List<Item> playerItems = player.GetItems();
+                if (q && selectedItemInt < playerItems.Count)
+                {
+                    Item selectedItem = playerItems[selectedItemInt];
+                    player.RemoveItem(selectedItem);
+                    AddItem(selectedItem);
+                    Program.WriteOffset("--> Item put down", offsetY, coloUr: Program.OutputColoUr);
+                }
+                else
+                {
+                    
+                    Program.WriteOffset("--> Failed", offsetY, coloUr: Program.OutputColoUr);
+                }
+
+                break;
+            
+            case "2": // remove item from shelf
+                message = "Which item?: ";
+                Program.WriteOffset(message, offsetY);
+                string itemString = Program.Input(offsetY: offsetY, offsetX: message.Length + Program.SidebarPosition, singleCharQ: true);
+                offsetY++;
+                
+                bool parse = int.TryParse(itemString, out int itemInt);
+                
+                List<Item> shelfItems = GetItems();
+                if (parse && itemInt < shelfItems.Count)
+                {
+                    Item selectedItem = shelfItems[itemInt];
+                    player.AddItem(selectedItem);
+                    RemoveItem(selectedItem);
+                    Program.WriteOffset("--> Item taken", offsetY, coloUr: Program.OutputColoUr);
+                }
+                else
+                {
+                    
+                    Program.WriteOffset("--> Failed", offsetY, coloUr: Program.OutputColoUr);
+                }
+                break;
+        }
+    }
+
+
+    private void AddItem(Item item)
     {
         _items.Add(item);
     }
-    
-    public void RemoveItem(Item item)
+
+    private void RemoveItem(Item item)
     {
         _items.Remove(item);
     }
 
-    public List<Item> GetItems()
+    private List<Item> GetItems()
     {
         return _items;
     }
 
-    public string[] GetItemNames()
+    private string[] GetItemNames()
     {
         string[] itemNames = new string[_items.Count];
         int i = 0;
@@ -682,7 +696,7 @@ internal class House
             new("Dressing Table0", 12, 11, "A dressing table", false),
             new("Dressing Table1", 13, 11, "A dressing table", false),
             new("Dirty clothes", 12, 8, "Your dirty clothes, clean up after yourself!"),
-            new Message("Door locked message", 19, 8, "You unlock your bedroom door with a key in your closet safe"),
+            new Message("Door locked message", 19, 8, "You unlock your bedroom door with a key in your closet"),
             new Shelf("Bedside table", 6, 11, "A bedside table.", '?')
         ];
         _rooms[1].SetItems(bedroomBed);
@@ -764,7 +778,7 @@ internal class Room(string roomName, int xPos, int yPos, int height = 5, int len
         int i = 0;
         foreach (Door d in _doors)
         {
-            roomNames[i] = d.UseDoor(this).RoomName;
+            roomNames[i] = d.GetFarRoom(this).RoomName;
             i++;
         }
         return roomNames;
@@ -841,7 +855,8 @@ internal class Door
         
     }
     
-    public Room UseDoor(Room r)
+    // used in moving and listing where doors lead to
+    public Room GetFarRoom(Room r)
     {
         return r == _r1 ? _r2 : _r1; // unlocking door is handled in TryDoor() in Program
     }
@@ -876,12 +891,14 @@ internal class Door
             }
         }
 
-        player.SetRoom(player.GetRoom() == _r1 ? _r2 : _r1); // set player room
+        player.SetRoom(GetFarRoom(player.GetRoom())); // set player room
         Program.DrawRoom(player.GetRoom());
 
         if (player.GetCoords().X > newX) Program.MovePlayer(player, newX - 1, newY); // if door to the left
         else if (player.GetCoords().X < newX) Program.MovePlayer(player, newX + 1, newY); // if door to the right
         else if (player.GetCoords().Y < newY) Program.MovePlayer(player, newX, newY + 1); // if door to the top
         else if (player.GetCoords().Y > newY) Program.MovePlayer(player, newX, newY - 1); // if door to the bottom
+        
+        // drawing happens from MovePlayer (from if statements)
     }
 }
