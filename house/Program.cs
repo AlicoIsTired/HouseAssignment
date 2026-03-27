@@ -59,6 +59,7 @@ internal static class Program
         Run(player);
     }
     
+    
     /// <summary>
     /// running the house
     /// </summary>
@@ -106,8 +107,7 @@ internal static class Program
                             TryDoor(player, selectedX, selectedY);
                             break;
 
-                        case WallSymbol:
-
+                        case WallSymbol: // doesn't do anything if wall
                             break;
 
                         default:
@@ -152,18 +152,38 @@ internal static class Program
         } while (repeat);
     }
 
-    private static void TryDoor(Player  player, int selectedX, int selectedY)
+    
+    public static void MovePlayer(Player player, int newX, int newY) // WARNING: if door pressed against edge (somehow) room will be set but not location
+    {
+        if (newX < MapWidth - 1 && newY < Height - 1)
+            // I don't know why but this is how it wants to be
+        {
+            Map[player.GetCoords().X, player.GetCoords().Y] = ' ';
+            player.SetCoords(newX, newY);
+            Map[newX, newY] = PlayerSymbol;
+            Draw();
+        }
+    }
+
+    
+    /// <summary>
+    /// gets door then tries to go through it
+    /// </summary>
+    /// <param name="player">player</param>
+    /// <param name="doorX">door's X</param>
+    /// <param name="doorY">door's Y</param>
+    private static void TryDoor(Player  player, int doorX, int doorY)
     {
         Door door = null!;
         foreach (Door d in player.GetRoom().GetDoors()) // get targeted door
         {
-            if (d.X == selectedX && d.Y == selectedY)
+            if (d.X == doorX && d.Y == doorY)
             {
                 door = d;
             }
         }
         
-        door.TryDoor(player, selectedX, selectedY);
+        door.TryDoor(player, doorX, doorY);
     }
     
     
@@ -187,18 +207,6 @@ internal static class Program
         item.InteractWithItem(player, itemX, itemY, lastMovementDirection);
     }
     
-
-    public static void MovePlayer(Player player, int newX, int newY) // WARNING: if door pressed against edge (somehow) room will be set but not location
-    {
-        if (newX < MapWidth - 1 && newY < Height - 1)
-            // I don't know why but this is how it wants to be
-        {
-            Map[player.GetCoords().X, player.GetCoords().Y] = ' ';
-            player.SetCoords(newX, newY);
-            Map[newX, newY] = PlayerSymbol;
-            Draw();
-        }
-    }
 
     public static void DrawRoom(Room room)
     {
@@ -245,35 +253,12 @@ internal static class Program
         }
     }
     
-
-    /// <summary>
-    /// writes the door numbers and where they lead
-    /// </summary>
-    /// <param name="names">string array of door options</param>
-    /// <param name="text">Text between index and name</param>
-    /// <param name="offsetY">vertical offset of text</param>
-    /// <returns></returns>
-    public static int WriteOptions(string[] names, string text,  int offsetY = 1)
-    {
-        if (names.Length == 0)
-        {   
-            WriteOffset("Nothing", offsetY);
-            offsetY++;
-            return offsetY;
-        }
-        foreach (string name in names)
-        {
-            WriteOffset((Array.IndexOf(names, name) + text + name), offsetY);
-            offsetY++;
-        }
-        return offsetY;
-    }
     
     /// <summary>
     /// clear and put middle line down
     /// </summary>
     /// <param name="player">initialised player</param>
-    public static void Setup(Player player)
+    private static void Setup(Player player)
     {
         Console.Clear();
         WriteOffset("Map here maybe", 4, 20);
@@ -318,6 +303,30 @@ internal static class Program
 
         Console.ForegroundColor = ConsoleColor.White;
     }
+    
+    
+    /// <summary>
+    /// writes the door numbers and where they lead
+    /// </summary>
+    /// <param name="names">string array of door options</param>
+    /// <param name="text">Text between index and name</param>
+    /// <param name="offsetY">vertical offset of text</param>
+    /// <returns></returns>
+    public static int WriteOptions(string[] names, string text,  int offsetY = 1)
+    {
+        if (names.Length == 0)
+        {   
+            WriteOffset("Nothing", offsetY);
+            offsetY++;
+            return offsetY;
+        }
+        foreach (string name in names)
+        {
+            WriteOffset((Array.IndexOf(names, name) + text + name), offsetY);
+            offsetY++;
+        }
+        return offsetY;
+    }
 
 
     /// <summary>
@@ -350,7 +359,7 @@ internal static class Program
     /// <summary>
     /// clears the sidebar
     /// </summary>
-    public static void ClearSideBar()
+    private static void ClearSideBar()
     {
         for (int y = 0; y < Height; y++)
         {
@@ -358,7 +367,6 @@ internal static class Program
             Console.Write(new string(' ', SidebarWidth));
         }
     }
-    
 }
 
 
