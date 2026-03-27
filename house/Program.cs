@@ -102,7 +102,7 @@ internal static class Program
 
                         case '-':
                         case '|':
-                            TryDoor(player, selectedX, selectedY);
+                            player.TryDoor(player, selectedX, selectedY);
                             break;
 
                         case WallSymbol:
@@ -279,52 +279,9 @@ internal static class Program
                 break;
         }
     }
-    
-    /// <summary>
-    /// Attempts to go through door, if locked, tries to unlock it with a key.
-    /// </summary>
-    /// <param name="player">The player</param>
-    /// <param name="newX">X of the door</param>
-    /// <param name="newY">Y of the door</param>
-    private static void TryDoor(Player player, int newX, int newY)
-    {
-        Door door = null!;
-        foreach(Door d in player.GetRoom().GetDoors()) // get targeted door
-        {
-            if (d.X == newX && d.Y == newY)
-            {
-                door = d;
-            }
-        }
 
-        if (door.GetLockedQ()) // if door locked, try to use a key, else cancel movement
-        {
-            foreach (Key k in player.GetItems().OfType<Key>())
-            {
-                if (k.LockedDoor == door)
-                {
-                    player.RemoveItem(k);
-                    door.SetLockedQ(false);
-                    WriteOffset("Door unlocked!");
-                    break;
-                }
-            }
-            if (door.GetLockedQ())
-            {
-                WriteOffset("This door is locked. Maybe find a key first");
-                return;
-            }
-        }
-        player.SetRoom(door.UseDoor(player.GetRoom())); // set player room
-        DrawRoom(player.GetRoom());
-        
-        if (player.GetCoords().X > newX) MovePlayer(player, newX - 1, newY); // if door to the left
-        else if (player.GetCoords().X < newX) MovePlayer(player, newX + 1, newY); // if door to the right
-        else if (player.GetCoords().Y < newY) MovePlayer(player, newX, newY + 1); // if door to the top
-        else if (player.GetCoords().Y > newY) MovePlayer(player, newX, newY - 1); // if door to the bottom
-    }
 
-    private static void MovePlayer(Player player, int newX, int newY) // WARNING: if door pressed against edge (somehow) room will be set but not location
+    public static void MovePlayer(Player player, int newX, int newY) // WARNING: if door pressed against edge (somehow) room will be set but not location
     {
         if (newX < MapWidth - 1 && newY < Height - 1)
             // I don't know why but this is how it wants to be
@@ -335,8 +292,8 @@ internal static class Program
             Draw();
         }
     }
-    
-    private static void DrawRoom(Room room)
+
+    public static void DrawRoom(Room room)
     {
         
         for (int y = room.Y; y < room.Y + room.Height; y++)
@@ -367,7 +324,7 @@ internal static class Program
         }
     }
 
-    private static void Draw() // could prolly change this so characters are written individually, so the walls could be made grey (less busy visually)
+    public static void Draw() // could prolly change this so characters are written individually, so the walls could be made grey (less busy visually)
     {
         Console.SetCursorPosition(0,0);
         for (int y = 0; y < Height; y++)
@@ -389,7 +346,7 @@ internal static class Program
     /// <param name="text">Text between index and name</param>
     /// <param name="offsetY">vertical offset of text</param>
     /// <returns></returns>
-    private static int WriteOptions(string[] names, string text,  int offsetY = 1)
+    public static int WriteOptions(string[] names, string text,  int offsetY = 1)
     {
         if (names.Length == 0)
         {   
@@ -409,7 +366,7 @@ internal static class Program
     /// clear and put middle line down
     /// </summary>
     /// <param name="player">initialised player</param>
-    private static void Setup(Player player)
+    public static void Setup(Player player)
     {
         Console.Clear();
         WriteOffset("Map here maybe", 4, 20);
@@ -440,7 +397,7 @@ internal static class Program
     /// <param name="offsetY">the offset on the Y axis, from the top</param>
     /// <param name="offsetX">the offset on the X axis, from the left</param>
     /// <param name="coloUr">ColoUr, defaults to white, and will always return to white at the end</param>
-    private static void WriteOffset(string text, int offsetY = 1, int offsetX = SidebarPosition,
+    public static void WriteOffset(string text, int offsetY = 1, int offsetX = SidebarPosition,
         ConsoleColor coloUr = ConsoleColor.White)
     {
         Console.ForegroundColor = coloUr;
@@ -464,7 +421,7 @@ internal static class Program
     /// <param name="offsetX">X offset</param>
     /// <param name="singleCharQ">If only a single character is allowed to be inputted</param>
     /// <returns>input</returns>
-    private static string Input(bool clearQ = false, int offsetY = 0, int offsetX = SidebarPosition, bool singleCharQ = false)
+    public static string Input(bool clearQ = false, int offsetY = 0, int offsetX = SidebarPosition, bool singleCharQ = false)
     {
         Console.SetCursorPosition(offsetX, offsetY);
         Console.ForegroundColor = InputColoUr;
@@ -486,7 +443,7 @@ internal static class Program
     /// <summary>
     /// clears the sidebar
     /// </summary>
-    private static void ClearSideBar()
+    public static void ClearSideBar()
     {
         for (int y = 0; y < Height; y++)
         {
@@ -569,6 +526,52 @@ internal class Player
     public void SetRoom(Room newRoom)
     {
         _currRoom = newRoom;
+    }
+    
+    
+    /// <summary>
+    /// Attempts to go through door, if locked, tries to unlock it with a key.
+    /// </summary>
+    /// <param name="player">The player</param>
+    /// <param name="newX">X of the door</param>
+    /// <param name="newY">Y of the door</param>
+    public void TryDoor(Player player, int newX, int newY)
+    {
+        Door door = null!;
+        foreach(Door d in player.GetRoom().GetDoors()) // get targeted door
+        {
+            if (d.X == newX && d.Y == newY)
+            {
+                door = d;
+            }
+        }
+
+        if (door.GetLockedQ()) // if door locked, try to use a key, else cancel movement
+        {
+            foreach (Key k in player.GetItems().OfType<Key>())
+            {
+                if (k.LockedDoor == door)
+                {
+                    player.RemoveItem(k);
+                    door.SetLockedQ(false);
+                    Program.WriteOffset("Door unlocked!");
+                    break;
+                }
+            }
+            if (door.GetLockedQ())
+            {
+                Program.WriteOffset("This door is locked. Maybe find a key first");
+                return;
+            }
+        }
+        
+        player.SetRoom(door.UseDoor(player.GetRoom())); // set player room
+        Program.DrawRoom(player.GetRoom());
+        
+        if (player.GetCoords().X > newX) Program.MovePlayer(player, newX - 1, newY); // if door to the left
+        else if (player.GetCoords().X < newX) Program.MovePlayer(player, newX + 1, newY); // if door to the right
+        else if (player.GetCoords().Y < newY) Program.MovePlayer(player, newX, newY + 1); // if door to the top
+        else if (player.GetCoords().Y > newY) Program.MovePlayer(player, newX, newY - 1); // if door to the bottom
     }
 }
 
