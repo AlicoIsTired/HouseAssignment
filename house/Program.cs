@@ -40,15 +40,32 @@ internal static class Program
         // set up the uhh line in the middle and run
         Setup(player);
         Run(player);
-        CalculateScore(house);
+        CalculateScore(house, player);
     }
 
-    private static void CalculateScore(House house)
+    
+    private static void CalculateScore(House house, Player player)
     {
         // TODO: scores based on doors unlocked, items moved + held, etc
-        house.GetDoors();
-    }
+        // where certain items are
+        int score = 0;
+        Console.Clear();
+        foreach (Door d in house.GetDoors()) // opened doors
+        {
+            if (!d.GetLockedQ()) score++;
+        }
 
+        if (player.GetItemNames().Length < 7) // carried items
+        {
+            score += player.GetItemNames().Length;
+        }
+        
+        Console.WriteLine($"Your score is {score}");
+        Console.ReadKey();
+
+    }
+    
+    
     /// <summary>
     /// running the house
     /// </summary>
@@ -113,7 +130,8 @@ internal static class Program
                                 "\nmovement - w/a/s/d - move the player and interact" +
                                 "\nlist doors - l - list doors of current room" +
                                 "\nfind items - f - search for items in the room" + 
-                                "\nquit - q - leave the program");
+                                "\ninventory - i - what you are currently carrying" +
+                                "\nquit - q - get ranking and leave");
                     break;
                 
                 case "l":
@@ -228,6 +246,7 @@ internal static class Program
         }
     }
 
+    
     public static void Draw() // could prolly change this so characters are written individually, so the walls could be made grey (less busy visually)
     {
         Console.SetCursorPosition(0,0);
@@ -658,23 +677,20 @@ internal class House
     [SuppressMessage("ReSharper", "ObjectCreationAsStatement")]
     public House()
     {
-        
+        // hall - 0
         _rooms.Add(new Room("Hallway",20,4, 12));
-        _rooms.Add(new Room("Bedroom",5,7, 6, 16));
-        _rooms.Add(new Room("Bedroom closet", 5, 12, 4, 6));
-        
-        // player begins in the Bedroom (room 1)
-        List<Item> playerItems =
+        List<Item> hallItems =
         [
-            new Item("Pajamas", 4, 4, "")
+            new("Hall Table", 21, 14, "A table.", false),
+            new Message("Painting", 24, 11, "A painting, it has a price sticker... \"£5.99\""),
+            new Shelf("Floor", 23, 12, "The floor, might look good with some stuff thrown on it", '.')
         ];
-        Player = new Player(_rooms[1], 6, 8, playerItems);
-        
-        // Door for bedroom closet and locked door to leave bedroom
-        _doors.Add(new Door(_rooms[1], _rooms[2], 7, 12)); 
-        _doors.Add(new Door(_rooms[0], _rooms[1], 20, 9, true));
+        _rooms[0].SetItems(hallItems);
 
-        // Bedroom items
+        
+        // Bedroom - 1
+        _rooms.Add(new Room("Bedroom",5,7, 6, 16)); 
+        _doors.Add(new Door(_rooms[0], _rooms[1], 20, 9, true)); // door to hall - 0
         List<Item> bedroomBed =
         [
             new("Bed00", 6, 9, "You bed's one pillow", false, ']'),
@@ -695,29 +711,24 @@ internal class House
         _rooms[1].SetItems(bedroomBed);
         _rooms[1].AddItems(bedroomItems);
 
-        // closet items
+        
+        // closet - 2
+        _rooms.Add(new Room("Bedroom closet", 5, 12, 4, 6));
+        _doors.Add(new Door(_rooms[1], _rooms[2], 7, 12)); // Door for bedroom closet - 1
         List<Item> closetItems =
         [
             new("clothes1", 7, 14, "Some clean clothes", false),
             new("clothes2", 9, 13, "Some clean clothes", false),
             new("clothes3", 9, 14, "Some clean clothes", false),
             new Message("Message", 8, 14, "The code for the safe is \"Hello world\""),
-            new Safe("Safe", 6, 14, new Key("Key", 0, 0, _doors[1], "A key"), "This seems to be a safe", "Hello world")
+            new Safe("Safe", 6, 14, new Key("Key", 0, 0, _doors[0], "A key"), "This seems to be a safe", "Hello world")
         ];
         _rooms[2].SetItems(closetItems);
-
-        // hall items
-        List<Item> hallItems =
-        [
-            new("Hall Table", 21, 14, "A table.", false),
-            new Message("Painting", 24, 11, "A painting, it has a price sticker... \"£5.99\"")
-        ];
-        _rooms[0].SetItems(hallItems);
         
-        // bathroom
+        
+        // bathroom - 3
         _rooms.Add(new Room("Bathroom", 15, 1, 7, 6));
-        _doors.Add(new Door(_rooms[0], _rooms[3], 20, 5));
-
+        _doors.Add(new Door(_rooms[0], _rooms[3], 20, 5)); // - 2
         List<Item> bathroomItems =
         [
             new("bath0", 16, 2, "Your bath. For some reason you left it full of water", false),
@@ -729,11 +740,46 @@ internal class House
         ];
         _rooms[3].SetItems(bathroomItems);
         
-        _rooms.Add(new Room("", 20, 0, 5, 10));
-        _doors.Add(new Door(_rooms[0], _rooms[4], 22, 4));
         
+        // TODO: kitchen - 4
         _rooms.Add(new Room("", 24, 4, 5, 10));
-        _doors.Add(new Door(_rooms[0], _rooms[5], 24, 6));
+        _doors.Add(new Door(_rooms[0], _rooms[4], 24, 6, true)); // - 3
+        
+        
+        // guest bedroom - 5
+        _rooms.Add(new Room("Guest bedroom", 20, 0, 5, 10));
+        _doors.Add(new Door(_rooms[0], _rooms[5], 22, 4)); // - 4
+        List<Item> guestItems =
+        [
+            new("Bed0", 28, 1, "The Guest bed, it is neat.", false, '['),
+            new Shelf("Bed1", 27, 1,"Toothpaste would look good on the bed... right?", '%'),
+            new("Bed2", 26, 1, "Its the guest bed", false, '%'),
+            
+            new Key("Kitchen key", 28, 3, _doors[3], "It's another key"),
+            
+            new Shelf("Wardrobe0", 21, 1, "It's a wardrobe, you think it is for clean clothes.", '?'),
+            new("Wardrobe1", 21, 2, "Its a wardrobe, this side is locked", false)
+        ];
+        _rooms[5].SetItems(guestItems);
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        // player begins in the Bedroom (room 1)
+        List<Item> playerItems =
+        [
+            new("Pajamas", 4, 4, "")
+        ];
+        Player = new Player(_rooms[1], 6, 8, playerItems);
     }
 
     public List<Door> GetDoors()
@@ -859,7 +905,7 @@ internal class Door
         return r == _r1 ? _r2 : _r1; // unlocking door is handled in TryDoor() in Program
     }
 
-
+    
     /// <summary>
     /// Attempts to go through door, if locked, tries to unlock it with a key.
     /// </summary>
@@ -898,5 +944,11 @@ internal class Door
         else if (player.GetCoords().Y > newY) Program.MovePlayer(player, newX, newY - 1); // if door to the bottom
         
         // drawing happens from MovePlayer (from if statements)
+    }
+    
+    
+    public bool GetLockedQ()
+    {
+        return _lockedQ;
     }
 }
