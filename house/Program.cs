@@ -34,7 +34,7 @@ internal static class Program
         House house = new House();
         Player player = house.Player;
         
-        Console.Write("TEXT GOES HERE ");
+        Console.Write("You wake up, well, not particularly, what was that word? ah yes, sleepwalking. See what the other you has been up to ");
         Console.ReadKey(true);
         
         // set up the uhh line in the middle and run
@@ -46,21 +46,21 @@ internal static class Program
     
     private static void CalculateScore(House house, Player player)
     {
-        // TODO: scores based on doors unlocked, items moved + held, etc
-        // where certain items are
         int score = 0;
         Console.Clear();
         foreach (Door d in house.GetDoors()) // opened doors
         {
-            if (!d.GetLockedQ()) score++;
+            if (!d.GetLockedQ()) score += 2;
         }
 
-        if (player.GetItemNames().Length < 7) // carried items
+        if (player.GetItemNames().Length < 5) // carried items
         {
             score += player.GetItemNames().Length;
         }
+
+        score += house.GetShelfScore() * 2;
         
-        Console.WriteLine($"Your score is {score}");
+        Console.WriteLine($"Your score is {score}, this is calculated through the position of items and opened doors.");
         Console.ReadKey();
 
     }
@@ -549,7 +549,7 @@ internal class Safe(string name, int xCoord, int yCoord, Item contents, string t
 /// <summary>
 /// A shelf that items can be stored on
 /// </summary>
-internal class Shelf(string name, int xCoord, int yCoord, string text, char symbol = '~') : Item(name, xCoord, yCoord, text, false, symbol)
+internal class Shelf(string name, int xCoord, int yCoord, string text, char symbol = '~', Item? preferredItem = null) : Item(name, xCoord, yCoord, text, false, symbol)
 {
     private readonly List<Item> _items = [];
 
@@ -622,7 +622,6 @@ internal class Shelf(string name, int xCoord, int yCoord, string text, char symb
         }
     }
 
-
     private void AddItem(Item item)
     {
         _items.Add(item);
@@ -650,6 +649,15 @@ internal class Shelf(string name, int xCoord, int yCoord, string text, char symb
 
         return itemNames;
     }
+    
+    public bool HasPreferredItemQ()
+    {
+        return preferredItem != null && _items.Contains(preferredItem);
+    }
+
+
+
+
 }
 
 
@@ -681,9 +689,9 @@ internal class House
         _rooms.Add(new Room("Hallway",20,4, 12));
         List<Item> hallItems =
         [
+            new Shelf("Floor", 23, 12, "The floor, might look good with some stuff thrown on it", '.'),
             new("Hall Table", 21, 14, "A table.", false),
-            new Message("Painting", 24, 11, "A painting, it has a price sticker... \"£5.99\""),
-            new Shelf("Floor", 23, 12, "The floor, might look good with some stuff thrown on it", '.')
+            new Message("Painting", 20, 13, "A painting, it has a price sticker... \"£5.99\"")
         ];
         _rooms[0].SetItems(hallItems);
 
@@ -702,11 +710,12 @@ internal class House
         ];
         List<Item> bedroomItems =
         [
+            
+            new Shelf("Bedside table", 6, 11, "A bedside table.", '?'),
             new("Dressing Table0", 12, 11, "A dressing table", false),
             new("Dressing Table1", 13, 11, "A dressing table", false),
             new("Dirty clothes", 12, 8, "Your dirty clothes, clean up after yourself!"),
-            new Message("Door locked message", 19, 8, "You unlock your bedroom door with a key in your closet"),
-            new Shelf("Bedside table", 6, 11, "A bedside table.", '?')
+            new Message("Door locked message", 19, 8, "You unlock your bedroom door with a key in your closet")
         ];
         _rooms[1].SetItems(bedroomBed);
         _rooms[1].AddItems(bedroomItems);
@@ -731,19 +740,44 @@ internal class House
         _doors.Add(new Door(_rooms[0], _rooms[3], 20, 5)); // - 2
         List<Item> bathroomItems =
         [
-            new("bath0", 16, 2, "Your bath. For some reason you left it full of water", false),
+            new Shelf("bath0", 16, 2, "Your bath. For some reason you left it full of water", '?'),
             new("bath1", 17, 2, "Your bath. For some reason you left it full of water", false),
             new("bath2", 18, 2, "Your bath. For some reason you left it full of water", false),
             
             new("Toothpaste", 16, 4, "Weird mint flavoured paste..."),
-            new("Mirror", 16, 5, "It's a mirror. You look tired", false, ']')
+            new("Mirror", 16, 5, "It's a mirror. You look tired", false, ']'),
+            new Message("Message", 16, 6, "On the sink there is a note: \"Password for guest safe is the bed's size\"")
         ];
         _rooms[3].SetItems(bathroomItems);
         
         
-        // TODO: kitchen - 4
-        _rooms.Add(new Room("", 24, 4, 5, 10));
+        // kitchen - 4
+        _rooms.Add(new Room("", 24, 4, 7, 11));
         _doors.Add(new Door(_rooms[0], _rooms[4], 24, 6, true)); // - 3
+        List<Item> kitchenItems =
+        [
+            new("Clean clothes", 30, 8, "Neatly folded clothes in a washing basket"),
+            new("counter00", 26, 7, "Your table", false, '='),
+            new("counter10", 27, 7, "Your table", false, '='),
+            new("counter01", 26, 8, "Your table", false, '='),
+            new("counter11", 27, 8, "Your table", false, '=')
+        ];
+        List<Item> kitchenSides =
+        [
+            new("side0", 25, 5, "Your fridge", false, '_'),
+            new("side1", 26, 5, "Your Kitchen side", false, '_'),
+            new("side2", 27, 5, "Your Kitchen side", false, '_'),
+            new Shelf("side3", 28, 5, "The dishwasher, what does it wash again?", preferredItem: kitchenItems[0]),
+            new("side4", 29, 5, "Your Kitchen side", false, '_'),
+            new Shelf("side5", 30, 5, "The sink"),
+            new("side6", 31, 5, "Your Kitchen side", false, '_'),
+            new("side7", 32, 5, "Your Kitchen side", false, '_'),
+            new("side8", 33, 5, "Your Kitchen side", false, '#'),
+            new("side9", 33, 6, "Your oven", false, '['),
+            new("side10", 33, 7, "Your Kitchen side", false, '[')
+        ];
+        _rooms[4].SetItems(kitchenItems);
+        _rooms[4].AddItems(kitchenSides);
         
         
         // guest bedroom - 5
@@ -751,29 +785,32 @@ internal class House
         _doors.Add(new Door(_rooms[0], _rooms[5], 22, 4)); // - 4
         List<Item> guestItems =
         [
-            new("Bed0", 28, 1, "The Guest bed, it is neat.", false, '['),
-            new Shelf("Bed1", 27, 1,"Toothpaste would look good on the bed... right?", '%'),
+            new("Bed0", 28, 1, "The Guest bed, it is neatly tucked in.", false, '['),
+            new Shelf("Bed1", 27, 1,"Toothpaste would look good on the bed... right?", '%', bathroomItems[3]), // toothpaste
             new("Bed2", 26, 1, "Its the guest bed", false, '%'),
             
-            new Key("Kitchen key", 28, 3, _doors[3], "It's another key"),
+            new Shelf("Wardrobe0", 21, 1, "It's a wardrobe, you think it is for clean clothes.", '?', bedroomItems[4]),
+            new("Wardrobe1", 21, 2, "Its a wardrobe, this side is locked", false),
             
-            new Shelf("Wardrobe0", 21, 1, "It's a wardrobe, you think it is for clean clothes.", '?'),
-            new("Wardrobe1", 21, 2, "Its a wardrobe, this side is locked", false)
+            new Safe("safe", 28, 3, new Key("Kitchen key", 28, 3, _doors[3], "It's another key"), "It's another safe", "6")
         ];
         _rooms[5].SetItems(guestItems);
-            
+
+        // living room - 6
+        _rooms.Add(new Room("", 24, 10, 6, 12));
+        _doors.Add(new Door(_rooms[4], _rooms[6], 28, 10)); // - 5
+        _rooms[6].AddItem(new Item("Foldable lawn chair", 29, 13, "This chair is the only thing in your living room. Sad."));
+
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
+
+
         // player begins in the Bedroom (room 1)
         List<Item> playerItems =
         [
@@ -785,6 +822,23 @@ internal class House
     public List<Door> GetDoors()
     {
         return _doors;
+    }
+
+    public int GetShelfScore() // this prolly can be simplified but...
+    {
+        int score = 0;
+        foreach (Room r in  _rooms)
+        {
+            foreach (Item i in r.GetItems())
+            {
+                if (i is Shelf s)
+                {
+                    if (s.HasPreferredItemQ()) score++;
+                }
+            }
+        }
+
+        return score;
     }
 }
 
