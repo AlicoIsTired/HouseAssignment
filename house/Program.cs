@@ -19,14 +19,13 @@ internal static class Program
     
     public const ConsoleColor OutputColoUr = ConsoleColor.Yellow;
     
-    private static readonly char[,] Map = new char[MapWidth, Height];
+    private static readonly char[,] Map = new char[MapWidth, Height]; // this grid will hold what is displayed on screen
     private const char WallSymbol = '#';
     private const char PlayerSymbol = 'O';
     
 
     private static void Main()
     {
-        Console.OutputEncoding = System.Text.Encoding.UTF8;
 #pragma warning disable CA1416
         Console.WindowWidth = SidebarPosition + SidebarWidth;
 #pragma warning restore CA1416
@@ -43,7 +42,7 @@ internal static class Program
         CalculateScore(house, player);
     }
 
-    
+    // get score and display at end
     private static void CalculateScore(House house, Player player)
     {
         int score = 0;
@@ -58,7 +57,7 @@ internal static class Program
             score += player.GetItemNames().Length;
         }
 
-        score += house.GetShelfScore() * 2;
+        score += house.GetShelfScore() * 2; // items in correct place
         
         Console.WriteLine($"Your score is {score}, this is calculated through the position of items and opened doors.");
         Console.ReadKey();
@@ -75,7 +74,7 @@ internal static class Program
         bool repeat = true;
         do
         {
-            Console.SetCursorPosition(BarPosition, 0);
+            Console.SetCursorPosition(BarPosition, 0); // set cursor to right of screen
             string selectedOption = Input(true, singleCharQ: true).ToLower();
             
             ClearSideBar();
@@ -102,7 +101,7 @@ internal static class Program
                 if (selectedX >= 0 && selectedY >= 0)
                 {
                     char selectedObject = Map[selectedX, selectedY];
-                    switch (selectedObject)
+                    switch (selectedObject) // what to do
                     {
                         case ' ':
                             MovePlayer(player, selectedX, selectedY);
@@ -121,7 +120,6 @@ internal static class Program
                             break;
                     }
                 }
-
             }
             else switch (selectedOption) // if other
             {
@@ -129,18 +127,12 @@ internal static class Program
                     WriteOffset("help - h - list commands" +
                                 "\nmovement - w/a/s/d - move the player and interact" +
                                 "\nlist doors - l - list doors of current room" +
-                                "\nfind items - f - search for items in the room" + 
                                 "\ninventory - i - what you are currently carrying" +
                                 "\nquit - q - get ranking and leave");
                     break;
                 
                 case "l":
                     WriteOptions(player.GetRoom().GetDoorNames(), " : Leads to ");
-                    break;
-                
-                case "f":
-                    WriteOffset("This room contains...");
-                    WriteOptions(player.GetRoom().GetItemNames(), " : ", 2);
                     break;
                 
                 case "i":
@@ -214,7 +206,10 @@ internal static class Program
         item.InteractWithItem(player, lastMovementDirection);
     }
     
-
+    /// <summary>
+    /// Adds/updates room to Map
+    /// </summary>
+    /// <param name="room">Room being added</param>
     public static void DrawRoom(Room room)
     {
         
@@ -470,7 +465,8 @@ internal class Item(string name, int xCoord, int yCoord, string text, bool picku
     protected readonly string Text = text;
     public readonly char Symbol = symbol;
 
-    public virtual void InteractWithItem(Player player, string lastMovementDirection)
+    // interacting with items
+    public virtual void InteractWithItem(Player player, string lastMovementDirection) 
     {
         Program.WriteOffset(Text);
         
@@ -660,7 +656,7 @@ internal class Shelf(string name, int xCoord, int yCoord, string text, char symb
 
 }
 
-
+//this line does nothing.
 
 /// <summary>
 /// A key for a door, inherits properties from Item
